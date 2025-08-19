@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Core System Access -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    
+    <!-- Network Extension -->
+    <key>com.apple.developer.networking.networkextension</key>
+    <array>
+        <string>content-filter-provider</string>
+        <string>packet-tunnel-provider</string>
+        <string>app-proxy-provider</string>
+    </array>
+    
+    <!-- System Extension -->
+    <key>com.apple.developer.system-extension.install</key>
+    <true/>
+    
+    <!-- Network Access -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    
+    <key>com.apple.security.network.server</key>
+    <true/>
+    
+    <!-- File System Access -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+    
+    <key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
+    <array>
+        <string>/etc/hosts</string>
+        <string>/tmp/</string>
+    </array>
+    
+    <!-- Automation and Scripting -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+    
+    <key>com.apple.security.scripting-targets</key>
+    <dict>
+        <key>com.apple.systemevents</key>
+        <array>
+            <string>com.apple.systemevents</string>
+        </array>
+        <key>com.tinyspeck.slackmacgap</key>
+        <array>
+            <string>com.tinyspeck.slackmacgap</string>
+        </array>
+        <key>com.spotify.client</key>
+        <array>
+            <string>com.spotify.client</string>
+        </array>
+        <key>com.apple.Music</key>
+        <array>
+            <string>com.apple.Music</string>
+        </array>
+        <key>com.apple.finder</key>
+        <array>
+            <string>com.apple.finder</string>
+        </array>
+    </dict>
+    
+    <!-- Application Control -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.apple.coreservices.launchservicesd</string>
+        <string>com.apple.runningboard</string>
+    </array>
+    
+    <!-- Hardware Access -->
+    <key>com.apple.security.device.microphone</key>
+    <false/>
+    
+    <key>com.apple.security.device.camera</key>
+    <false/>
+    
+    <!-- Keychain -->
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)com.fuego.focus-app</string>
+    </array>
+    
+    <!-- Background Processing -->
+    <key>com.apple.developer.background-processing</key>
+    <true/>
+    
+    <!-- Login Items -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+    
+    <!-- Accessibility (for app blocking) -->
+    <key>com.apple.security.temporary-exception.apple-events</key>
+    <array>
+        <string>com.apple.systemevents</string>
+    </array>
+    
+    <!-- Push Notifications -->
+    <key>aps-environment</key>
+    <string>development</string>
+    
+    <!-- Team ID (replace with your actual team ID) -->
+    <key>com.apple.developer.team-identifier</key>
+    <string>YOUR_TEAM_ID</string>
+    
+    <!-- Application Groups (for sharing data with extensions) -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.fuego.focus-app</string>
+    </array>
+</dict>
+</plist>

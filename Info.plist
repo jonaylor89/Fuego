@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>Fuego</string>
+    <key>CFBundleExecutable</key>
+    <string>Fuego</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.fuego.focus-app</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>Fuego</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>LSUIElement</key>
+    <true/>
+    
+    <!-- Privacy Usage Descriptions -->
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Fuego needs to control other applications to run automation scripts and manage your focus sessions.</string>
+    <key>NSSystemExtensionUsageDescription</key>
+    <string>Fuego uses a network extension to block websites and internet access during focus sessions.</string>
+    <key>NSNetworkExtensionNeverLocked</key>
+    <string>YES</string>
+    
+    <!-- Required Entitlements -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+    <key>com.apple.security.scripting-targets</key>
+    <dict>
+        <key>com.apple.systemevents</key>
+        <array>
+            <string>com.apple.systemevents</string>
+        </array>
+        <key>com.tinyspeck.slackmacgap</key>
+        <array>
+            <string>com.tinyspeck.slackmacgap</string>
+        </array>
+        <key>com.spotify.client</key>
+        <array>
+            <string>com.spotify.client</string>
+        </array>
+        <key>com.apple.Music</key>
+        <array>
+            <string>com.apple.Music</string>
+        </array>
+    </dict>
+    
+    <!-- System Extension Configuration -->
+    <key>NSSystemExtensions</key>
+    <dict>
+        <key>com.fuego.focus-app.network-filter</key>
+        <dict>
+            <key>NSSystemExtensionBundleIdentifier</key>
+            <string>com.fuego.focus-app.network-filter</string>
+            <key>NSSystemExtensionUsageDescription</key>
+            <string>Blocks websites and network access during focus sessions</string>
+        </dict>
+    </dict>
+    
+    <!-- Background Processing -->
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.fuego.focus-app.schedule-check</string>
+        <string>com.fuego.focus-app.session-cleanup</string>
+    </array>
+    
+    <!-- Menu Bar App -->
+    <key>LSUIElement</key>
+    <true/>
+    
+    <!-- Document Types (for importing/exporting) -->
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>fuego</string>
+            </array>
+            <key>CFBundleTypeIconFile</key>
+            <string>FuegoDocument</string>
+            <key>CFBundleTypeName</key>
+            <string>Fuego Profile</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSTypeIsPackage</key>
+            <false/>
+        </dict>
+    </array>
+    
+    <!-- URL Schemes -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>Fuego Focus Control</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>fuego</string>
+            </array>
+        </dict>
+    </array>
+    
+    <!-- Launch Services -->
+    <key>LSMultipleInstancesProhibited</key>
+    <true/>
+    
+    <!-- Additional Properties -->
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    
+    <key>NSRequiresAquaSystemAppearance</key>
+    <false/>
+    
+    <!-- Copyright -->
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2024 Fuego Contributors. All rights reserved.</string>
+</dict>
+</plist>

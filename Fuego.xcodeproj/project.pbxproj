@@ -1,0 +1,751 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8F72C57F2E55760600E6ADF5 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F72C57E2E55760600E6ADF5 /* NetworkExtension.framework */; };
+		8F72C5872E55760600E6ADF5 /* FuegoContentFilter.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8F72C5C72E55844C00E6ADF5 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F72C5C62E55844C00E6ADF5 /* Logging */; };
+		8F72C5C92E55845500E6ADF5 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F72C5C82E55845500E6ADF5 /* Logging */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8F72C55C2E55757E00E6ADF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8F72C5452E55757D00E6ADF5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8F72C54C2E55757D00E6ADF5;
+			remoteInfo = Fuego;
+		};
+		8F72C5662E55757E00E6ADF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8F72C5452E55757D00E6ADF5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8F72C54C2E55757D00E6ADF5;
+			remoteInfo = Fuego;
+		};
+		8F72C5852E55760600E6ADF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8F72C5452E55757D00E6ADF5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8F72C57B2E55760600E6ADF5;
+			remoteInfo = FuegoContentFilter;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8F72C58C2E55760600E6ADF5 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				8F72C5872E55760600E6ADF5 /* FuegoContentFilter.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		8F72C54D2E55757D00E6ADF5 /* Fuego.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fuego.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F72C55B2E55757E00E6ADF5 /* FuegoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FuegoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F72C5652E55757E00E6ADF5 /* FuegoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FuegoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FuegoContentFilter.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F72C57E2E55760600E6ADF5 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		8F72C54F2E55757D00E6ADF5 /* Fuego */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Fuego;
+			sourceTree = "<group>";
+		};
+		8F72C55E2E55757E00E6ADF5 /* FuegoTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FuegoTests;
+			sourceTree = "<group>";
+		};
+		8F72C5682E55757E00E6ADF5 /* FuegoUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FuegoUITests;
+			sourceTree = "<group>";
+		};
+		8F72C5802E55760600E6ADF5 /* FuegoContentFilter */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FuegoContentFilter;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8F72C54A2E55757D00E6ADF5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F72C5C72E55844C00E6ADF5 /* Logging in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5582E55757E00E6ADF5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5622E55757E00E6ADF5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5792E55760600E6ADF5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F72C5C92E55845500E6ADF5 /* Logging in Frameworks */,
+				8F72C57F2E55760600E6ADF5 /* NetworkExtension.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8F72C5442E55757D00E6ADF5 = {
+			isa = PBXGroup;
+			children = (
+				8F72C54F2E55757D00E6ADF5 /* Fuego */,
+				8F72C55E2E55757E00E6ADF5 /* FuegoTests */,
+				8F72C5682E55757E00E6ADF5 /* FuegoUITests */,
+				8F72C5802E55760600E6ADF5 /* FuegoContentFilter */,
+				8F72C57D2E55760600E6ADF5 /* Frameworks */,
+				8F72C54E2E55757D00E6ADF5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8F72C54E2E55757D00E6ADF5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8F72C54D2E55757D00E6ADF5 /* Fuego.app */,
+				8F72C55B2E55757E00E6ADF5 /* FuegoTests.xctest */,
+				8F72C5652E55757E00E6ADF5 /* FuegoUITests.xctest */,
+				8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8F72C57D2E55760600E6ADF5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8F72C57E2E55760600E6ADF5 /* NetworkExtension.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8F72C54C2E55757D00E6ADF5 /* Fuego */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F72C56F2E55757E00E6ADF5 /* Build configuration list for PBXNativeTarget "Fuego" */;
+			buildPhases = (
+				8F72C5492E55757D00E6ADF5 /* Sources */,
+				8F72C54A2E55757D00E6ADF5 /* Frameworks */,
+				8F72C54B2E55757D00E6ADF5 /* Resources */,
+				8F72C58C2E55760600E6ADF5 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8F72C5862E55760600E6ADF5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				8F72C54F2E55757D00E6ADF5 /* Fuego */,
+			);
+			name = Fuego;
+			packageProductDependencies = (
+				8F72C5C62E55844C00E6ADF5 /* Logging */,
+			);
+			productName = Fuego;
+			productReference = 8F72C54D2E55757D00E6ADF5 /* Fuego.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8F72C55A2E55757E00E6ADF5 /* FuegoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F72C5722E55757E00E6ADF5 /* Build configuration list for PBXNativeTarget "FuegoTests" */;
+			buildPhases = (
+				8F72C5572E55757E00E6ADF5 /* Sources */,
+				8F72C5582E55757E00E6ADF5 /* Frameworks */,
+				8F72C5592E55757E00E6ADF5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8F72C55D2E55757E00E6ADF5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				8F72C55E2E55757E00E6ADF5 /* FuegoTests */,
+			);
+			name = FuegoTests;
+			packageProductDependencies = (
+			);
+			productName = FuegoTests;
+			productReference = 8F72C55B2E55757E00E6ADF5 /* FuegoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		8F72C5642E55757E00E6ADF5 /* FuegoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F72C5752E55757E00E6ADF5 /* Build configuration list for PBXNativeTarget "FuegoUITests" */;
+			buildPhases = (
+				8F72C5612E55757E00E6ADF5 /* Sources */,
+				8F72C5622E55757E00E6ADF5 /* Frameworks */,
+				8F72C5632E55757E00E6ADF5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8F72C5672E55757E00E6ADF5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				8F72C5682E55757E00E6ADF5 /* FuegoUITests */,
+			);
+			name = FuegoUITests;
+			packageProductDependencies = (
+			);
+			productName = FuegoUITests;
+			productReference = 8F72C5652E55757E00E6ADF5 /* FuegoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		8F72C57B2E55760600E6ADF5 /* FuegoContentFilter */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F72C5892E55760600E6ADF5 /* Build configuration list for PBXNativeTarget "FuegoContentFilter" */;
+			buildPhases = (
+				8F72C5782E55760600E6ADF5 /* Sources */,
+				8F72C5792E55760600E6ADF5 /* Frameworks */,
+				8F72C57A2E55760600E6ADF5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				8F72C5802E55760600E6ADF5 /* FuegoContentFilter */,
+			);
+			name = FuegoContentFilter;
+			packageProductDependencies = (
+				8F72C5C82E55845500E6ADF5 /* Logging */,
+			);
+			productName = FuegoContentFilter;
+			productReference = 8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8F72C5452E55757D00E6ADF5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					8F72C54C2E55757D00E6ADF5 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					8F72C55A2E55757E00E6ADF5 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 8F72C54C2E55757D00E6ADF5;
+					};
+					8F72C5642E55757E00E6ADF5 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 8F72C54C2E55757D00E6ADF5;
+					};
+					8F72C57B2E55760600E6ADF5 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+				};
+			};
+			buildConfigurationList = 8F72C5482E55757D00E6ADF5 /* Build configuration list for PBXProject "Fuego" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 8F72C5442E55757D00E6ADF5;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8F72C5C52E5583D300E6ADF5 /* XCRemoteSwiftPackageReference "swift-log" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 8F72C54E2E55757D00E6ADF5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8F72C54C2E55757D00E6ADF5 /* Fuego */,
+				8F72C55A2E55757E00E6ADF5 /* FuegoTests */,
+				8F72C5642E55757E00E6ADF5 /* FuegoUITests */,
+				8F72C57B2E55760600E6ADF5 /* FuegoContentFilter */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8F72C54B2E55757D00E6ADF5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5592E55757E00E6ADF5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5632E55757E00E6ADF5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C57A2E55760600E6ADF5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8F72C5492E55757D00E6ADF5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5572E55757E00E6ADF5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5612E55757E00E6ADF5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F72C5782E55760600E6ADF5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8F72C55D2E55757E00E6ADF5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8F72C54C2E55757D00E6ADF5 /* Fuego */;
+			targetProxy = 8F72C55C2E55757E00E6ADF5 /* PBXContainerItemProxy */;
+		};
+		8F72C5672E55757E00E6ADF5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8F72C54C2E55757D00E6ADF5 /* Fuego */;
+			targetProxy = 8F72C5662E55757E00E6ADF5 /* PBXContainerItemProxy */;
+		};
+		8F72C5862E55760600E6ADF5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8F72C57B2E55760600E6ADF5 /* FuegoContentFilter */;
+			targetProxy = 8F72C5852E55760600E6ADF5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		8F72C56D2E55757E00E6ADF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = Y84VDXN247;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		8F72C56E2E55757E00E6ADF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = Y84VDXN247;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		8F72C5702E55757E00E6ADF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Fuego/Fuego.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9HNXYM86C6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		8F72C5712E55757E00E6ADF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Fuego/Fuego.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9HNXYM86C6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		8F72C5732E55757E00E6ADF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y84VDXN247;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fuego.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Fuego";
+			};
+			name = Debug;
+		};
+		8F72C5742E55757E00E6ADF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y84VDXN247;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fuego.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Fuego";
+			};
+			name = Release;
+		};
+		8F72C5762E55757E00E6ADF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y84VDXN247;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Fuego;
+			};
+			name = Debug;
+		};
+		8F72C5772E55757E00E6ADF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y84VDXN247;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Fuego;
+			};
+			name = Release;
+		};
+		8F72C58A2E55760600E6ADF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FuegoContentFilter/FuegoContentFilter.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9HNXYM86C6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FuegoContentFilter/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fuego Content Filter";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus.FuegoContentFilter;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		8F72C58B2E55760600E6ADF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FuegoContentFilter/FuegoContentFilter.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9HNXYM86C6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FuegoContentFilter/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fuego Content Filter";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus.FuegoContentFilter;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8F72C5482E55757D00E6ADF5 /* Build configuration list for PBXProject "Fuego" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F72C56D2E55757E00E6ADF5 /* Debug */,
+				8F72C56E2E55757E00E6ADF5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8F72C56F2E55757E00E6ADF5 /* Build configuration list for PBXNativeTarget "Fuego" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F72C5702E55757E00E6ADF5 /* Debug */,
+				8F72C5712E55757E00E6ADF5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8F72C5722E55757E00E6ADF5 /* Build configuration list for PBXNativeTarget "FuegoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F72C5732E55757E00E6ADF5 /* Debug */,
+				8F72C5742E55757E00E6ADF5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8F72C5752E55757E00E6ADF5 /* Build configuration list for PBXNativeTarget "FuegoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F72C5762E55757E00E6ADF5 /* Debug */,
+				8F72C5772E55757E00E6ADF5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8F72C5892E55760600E6ADF5 /* Build configuration list for PBXNativeTarget "FuegoContentFilter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F72C58A2E55760600E6ADF5 /* Debug */,
+				8F72C58B2E55760600E6ADF5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8F72C5C52E5583D300E6ADF5 /* XCRemoteSwiftPackageReference "swift-log" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-log.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8F72C5C62E55844C00E6ADF5 /* Logging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F72C5C52E5583D300E6ADF5 /* XCRemoteSwiftPackageReference "swift-log" */;
+			productName = Logging;
+		};
+		8F72C5C82E55845500E6ADF5 /* Logging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F72C5C52E5583D300E6ADF5 /* XCRemoteSwiftPackageReference "swift-log" */;
+			productName = Logging;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 8F72C5452E55757D00E6ADF5 /* Project object */;
+}

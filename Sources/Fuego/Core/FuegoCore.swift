@@ -13,36 +13,29 @@ class FuegoCore: ObservableObject {
     let sessionManager: SessionManager
     let blockingEngine: BlockingEngine
     let timerEngine: TimerEngine
-    let scheduleManager: ScheduleManager
-    let profileManager: ProfileManager
-    let persistenceManager: PersistenceManager
-    let automationEngine: AutomationEngine
     let settingsManager: SettingsManager
+    let persistenceManager: PersistenceManager
     
     // Published state
     @Published var currentSession: Session?
-    @Published var activeProfile: Profile
     @Published var isBlocked: Bool = false
     @Published var timerState: TimerState = .idle
+    @Published var settings: FuegoSettings = FuegoSettings()
     
     private var cancellables = Set<AnyCancellable>()
     
     init() {
         // Initialize managers
         self.persistenceManager = PersistenceManager()
-        self.settingsManager = SettingsManager(persistence: persistenceManager)
-        self.profileManager = ProfileManager(persistence: persistenceManager)
+        self.settingsManager = SettingsManager()
         self.blockingEngine = BlockingEngine()
         self.timerEngine = TimerEngine()
-        self.scheduleManager = ScheduleManager()
         self.sessionManager = SessionManager(persistence: persistenceManager)
-        self.automationEngine = AutomationEngine()
         
-        // Load or create default profile
-        self.activeProfile = profileManager.loadActiveProfile() ?? profileManager.createDefaultProfile()
+        // Load settings
+        loadSettings()
         
         setupBindings()
-        scheduleManager.setFuegoCore(self)
         logger.info("Fuego Core initialized")
     }
     
@@ -58,70 +51,52 @@ class FuegoCore: ObservableObject {
         // Timer state changes
         timerEngine.$state
             .assign(to: &$timerState)
-        
-        // Profile changes
-        profileManager.$activeProfile
-            .compactMap { $0 }
-            .assign(to: &$activeProfile)
+    }
+    
+    private func loadSettings() {
+        settings = settingsManager.loadSettings()
     }
     
     // MARK: - Session Control
     
-    func startSession(with profile: Profile? = nil) async throws {
-        let sessionProfile = profile ?? activeProfile
-        logger.info("Starting session with profile: \(sessionProfile.name)")
-        
-        // Update active profile if different
-        if let profile = profile {
-            try await profileManager.setActiveProfile(profile)
-        }
+    func startSession() async throws {
+        logger.info("Starting focus session")
         
         // Start session
-        let session = try await sessionManager.startSession(with: sessionProfile)
+        _ = try await sessionManager.startSession()
         
-        // Apply blocking rules
-        try await blockingEngine.applyRules(sessionProfile.blockingRules)
+        // Apply blocking rules from settings
+        try await blockingEngine.applyRules(settings.blockedWebsites, settings.blockedApplications)
         
-        // Start timer if configured
-        if sessionProfile.timerConfig.isEnabled {
-            try await timerEngine.start(with: sessionProfile.timerConfig)
-        }
-        
-        // Trigger automation hooks
-        await automationEngine.executeHooks(for: .sessionStart, session: session)
+        // Start timer
+        try await timerEngine.start(duration: settings.timerDuration)
     }
     
     func pauseSession() async throws {
-        guard let session = currentSession else { return }
+        guard currentSession != nil else { return }
         
         logger.info("Pausing session")
         try await sessionManager.pauseSession()
         await blockingEngine.disable()
         timerEngine.pause()
-        
-        await automationEngine.executeHooks(for: .sessionPause, session: session)
     }
     
     func resumeSession() async throws {
-        guard let session = currentSession else { return }
+        guard currentSession != nil else { return }
         
         logger.info("Resuming session")
         try await sessionManager.resumeSession()
-        try await blockingEngine.applyRules(activeProfile.blockingRules)
+        try await blockingEngine.applyRules(settings.blockedWebsites, settings.blockedApplications)
         timerEngine.resume()
-        
-        await automationEngine.executeHooks(for: .sessionResume, session: session)
     }
     
     func endSession() async throws {
-        guard let session = currentSession else { return }
+        guard currentSession != nil else { return }
         
         logger.info("Ending session")
         try await sessionManager.endSession()
         await blockingEngine.disable()
         timerEngine.stop()
-        
-        await automationEngine.executeHooks(for: .sessionEnd, session: session)
     }
     
     // MARK: - Quick Actions
@@ -138,23 +113,16 @@ class FuegoCore: ObservableObject {
         }
     }
     
-    func startInstantWorkMode(duration: TimeInterval = 25 * 60) async throws {
-        let instantProfile = profileManager.createInstantWorkProfile(duration: duration)
-        try await startSession(with: instantProfile)
-    }
+    // MARK: - Settings Management
     
-    // MARK: - Profile Management
-    
-    func switchProfile(_ profile: Profile) async throws {
-        logger.info("Switching to profile: \(profile.name)")
+    func updateSettings(_ newSettings: FuegoSettings) async throws {
+        settings = newSettings
+        try settingsManager.saveSettings(newSettings)
         
-        // End current session if active
-        if currentSession != nil {
-            try await endSession()
+        // If session is active, update blocking rules
+        if currentSession != nil, !sessionManager.isPaused {
+            try await blockingEngine.applyRules(settings.blockedWebsites, settings.blockedApplications)
         }
-        
-        // Switch profile
-        try await profileManager.setActiveProfile(profile)
     }
     
     // MARK: - Lifecycle

@@ -19,14 +19,13 @@ class SessionManager: ObservableObject {
     
     // MARK: - Session Control
     
-    func startSession(with profile: Profile) async throws -> Session {
+    func startSession() async throws -> Session {
         // End any existing session first
         if currentSession != nil {
             try await endSession()
         }
         
         let session = Session(
-            profileId: profile.id,
             startTime: Date(),
             endTime: nil,
             pausedDuration: 0
@@ -39,7 +38,7 @@ class SessionManager: ObservableObject {
         // Save to persistence
         try persistence.saveSession(session)
         
-        logger.info("Session started with profile: \(profile.name)")
+        logger.info("Session started")
         return session
     }
     
@@ -113,37 +112,9 @@ class SessionManager: ObservableObject {
     
     // MARK: - Session Queries
     
-    func getRecentSessions(limit: Int = 10) -> [Session] {
-        return persistence.fetchSessions(limit: limit)
-    }
-    
-    func getSessionsForProfile(_ profileId: UUID, limit: Int? = nil) -> [Session] {
-        return persistence.fetchSessions(for: profileId, limit: limit)
-    }
-    
-    func getTodaysSessions() -> [Session] {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? Date()
-        
-        return persistence.fetchSessions().filter { session in
-            session.startTime >= today && session.startTime < tomorrow
-        }
-    }
-    
-    func getTodaysFocusTime() -> TimeInterval {
-        return getTodaysSessions().reduce(0) { $0 + $1.duration }
-    }
-    
     func getCurrentSessionDuration() -> TimeInterval {
         guard let session = currentSession else { return 0 }
         return session.duration
-    }
-    
-    func getCurrentSessionProgress(totalDuration: TimeInterval) -> Double {
-        guard let session = currentSession else { return 0 }
-        let elapsed = session.duration
-        return min(1.0, elapsed / totalDuration)
     }
 }
 

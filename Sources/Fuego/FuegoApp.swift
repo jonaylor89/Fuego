@@ -66,6 +66,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func setupCore() {
         fuegoCore = FuegoCore()
+        
+        // Run persistence test for debugging
+        #if DEBUG
+        // Test removed for simplicity
+        #endif
     }
     
     @objc private func togglePopover(_ sender: AnyObject?) {

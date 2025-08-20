@@ -10,7 +10,7 @@ class BlockingEngine: ObservableObject {
     private let logger = Logger(label: "com.fuego.blocking")
     
     @Published var isActive: Bool = false
-    @Published var currentRules: BlockingRules?
+    @Published var currentBlockedWebsites: Set<String> = []
     
     private var filterManager: NEFilterManager?
     private var hostsFileManager: HostsFileManager
@@ -25,15 +25,14 @@ class BlockingEngine: ObservableObject {
     // MARK: - Public Interface
     
     /// Apply blocking rules to start filtering
-    func applyRules(_ rules: BlockingRules) async throws {
+    func applyRules(_ blockedWebsites: Set<String>, _ blockedApplications: Set<String>) async throws {
         logger.info("Applying blocking rules")
-        currentRules = rules
         
         // Apply website blocking
-        try await applyWebsiteBlocking(rules)
+        try await applyWebsiteBlocking(blockedWebsites)
         
         // Apply app blocking
-        try await appBlockingManager.applyRules(rules)
+        try await appBlockingManager.applyRules(blockedApplications)
         
         isActive = true
         logger.info("Blocking rules applied successfully")
@@ -55,40 +54,17 @@ class BlockingEngine: ObservableObject {
         }
         
         isActive = false
-        currentRules = nil
         logger.info("Blocking disabled")
     }
     
     /// Check if a URL should be blocked
     func shouldBlockURL(_ url: URL) -> Bool {
-        guard let rules = currentRules, isActive else { return false }
+        guard isActive else { return false }
         
         let host = url.host?.lowercased() ?? ""
         
-        // Check for entire internet blocking
-        if rules.blockEntireInternet {
-            return !rules.allowedWebsites.contains(host)
-        }
-        
-        // Whitelist mode - only allow specified sites
-        if rules.useWhitelistMode {
-            return !rules.allowedWebsites.contains(host)
-        }
-        
         // Check blocked websites
-        if rules.blockedWebsites.contains(host) {
-            return true
-        }
-        
-        // Check blocked keywords
-        let urlString = url.absoluteString.lowercased()
-        for keyword in rules.blockedKeywords {
-            if urlString.contains(keyword.lowercased()) {
-                return true
-            }
-        }
-        
-        return false
+        return currentBlockedWebsites.contains(host)
     }
     
     // MARK: - Private Methods
@@ -103,50 +79,16 @@ class BlockingEngine: ObservableObject {
         }
     }
     
-    private func applyWebsiteBlocking(_ rules: BlockingRules) async throws {
-        if rules.blockEntireInternet || !rules.blockedWebsites.isEmpty || rules.useWhitelistMode {
-            // Use Network Extension for comprehensive blocking
-            try await setupNetworkFilter(rules)
-        } else if !rules.blockedWebsites.isEmpty {
+    private func applyWebsiteBlocking(_ blockedWebsites: Set<String>) async throws {
+        currentBlockedWebsites = blockedWebsites
+        
+        if !blockedWebsites.isEmpty {
             // Use hosts file for simple domain blocking
-            try await hostsFileManager.blockDomains(Array(rules.blockedWebsites))
+            try await hostsFileManager.blockDomains(Array(blockedWebsites))
         }
     }
     
-    private func setupNetworkFilter(_ rules: BlockingRules) async throws {
-        guard let filterManager = filterManager else {
-            throw BlockingError.networkExtensionNotAvailable
-        }
-        
-        let filterConfiguration = NEFilterProviderConfiguration()
-        filterConfiguration.username = "FuegoUser"
-        filterConfiguration.organization = "Fuego Focus App"
-        filterConfiguration.filterBrowsers = true
-        filterConfiguration.filterSockets = true
-        
-        // Configure the filter data provider
-        let providerConfiguration: [String: Any] = [
-            "blockedDomains": Array(rules.blockedWebsites),
-            "allowedDomains": Array(rules.allowedWebsites),
-            "blockEntireInternet": rules.blockEntireInternet,
-            "useWhitelistMode": rules.useWhitelistMode,
-            "blockedKeywords": Array(rules.blockedKeywords)
-        ]
-        
-        // Store configuration data for the filter provider
-        filterManager.providerConfiguration = filterConfiguration
-        filterManager.isEnabled = true
-        
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            filterManager.saveToPreferences { error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume()
-                }
-            }
-        }
-    }
+    // Network extension filtering removed for simplicity
 }
 
 // MARK: - Hosts File Management
@@ -248,17 +190,17 @@ class AppBlockingManager {
     private var monitoredApps: Set<String> = []
     private var isBlocking = false
     
-    func applyRules(_ rules: BlockingRules) async throws {
+    func applyRules(_ blockedApplications: Set<String>) async throws {
         logger.info("Applying app blocking rules")
         
-        monitoredApps = rules.blockedApplications
+        monitoredApps = blockedApplications
         isBlocking = true
         
         // Start monitoring running applications
         startAppMonitoring()
         
         // Kill currently running blocked apps
-        await terminateBlockedApps(rules.blockedApplications)
+        await terminateBlockedApps(blockedApplications)
     }
     
     func disableBlocking() async {

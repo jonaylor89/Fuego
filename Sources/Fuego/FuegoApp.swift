@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupPopover() {
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 360, height: 480)
+        popover?.contentSize = NSSize(width: 280, height: 360)
         popover?.behavior = .transient
         
         // Create the core first if needed
@@ -85,6 +85,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationWillTerminate(_ notification: Notification) {
-        fuegoCore?.shutdown()
+        Task {
+            await fuegoCore?.blockingEngine.cleanup()
+            await fuegoCore?.shutdown()
+        }
     }
 }

@@ -3,6 +3,7 @@ import NetworkExtension
 import Combine
 import Logging
 import AppKit
+import Security
 
 /// Manages website and application blocking functionality
 @MainActor
@@ -13,11 +14,11 @@ class BlockingEngine: ObservableObject {
     @Published var currentBlockedWebsites: Set<String> = []
     
     private var filterManager: NEFilterManager?
-    private var hostsFileManager: HostsFileManager
+    private var localServer: LocalBlockingServer
     private var appBlockingManager: AppBlockingManager
     
     init() {
-        self.hostsFileManager = HostsFileManager()
+        self.localServer = LocalBlockingServer()
         self.appBlockingManager = AppBlockingManager()
         setupNetworkExtension()
     }
@@ -28,21 +29,39 @@ class BlockingEngine: ObservableObject {
     func applyRules(_ blockedWebsites: Set<String>, _ blockedApplications: Set<String>) async throws {
         logger.info("Applying blocking rules")
         
-        // Apply website blocking
-        try await applyWebsiteBlocking(blockedWebsites)
-        
-        // Apply app blocking
-        try await appBlockingManager.applyRules(blockedApplications)
-        
-        isActive = true
-        logger.info("Blocking rules applied successfully")
+        do {
+            // Apply website blocking
+            try await applyWebsiteBlocking(blockedWebsites)
+            
+            // Apply app blocking
+            try await appBlockingManager.applyRules(blockedApplications)
+            
+            isActive = true
+            logger.info("Blocking rules applied successfully")
+        } catch {
+            logger.error("Failed to apply blocking rules: \(error)")
+            
+            // Show user-friendly error message if permission denied
+            if error is BlockingError || (error as NSError).code == 513 {
+                await MainActor.run {
+                    let alert = NSAlert()
+                    alert.messageText = "Administrator Access Required"
+                    alert.informativeText = "Fuego needs administrator access to block websites by modifying the hosts file. Please enter your password when prompted."
+                    alert.alertStyle = .informational
+                    alert.addButton(withTitle: "OK")
+                    alert.runModal()
+                }
+            }
+            
+            throw error
+        }
     }
     
     /// Disable all blocking
     func disable() async {
         logger.info("Disabling blocking")
         
-        await hostsFileManager.restoreHostsFile()
+        localServer.stop()
         await appBlockingManager.disableBlocking()
         
         if let filterManager = filterManager {
@@ -55,6 +74,42 @@ class BlockingEngine: ObservableObject {
         
         isActive = false
         logger.info("Blocking disabled")
+    }
+    
+    /// Clean up hosts file when app terminates
+    func cleanup() async {
+        logger.info("Cleaning up blocking engine")
+        localServer.stop()
+        await restoreHostsFileOnExit()
+    }
+    
+    private func restoreHostsFileOnExit() async {
+        let backupPath = "/tmp/fuego_hosts_backup"
+        
+        guard FileManager.default.fileExists(atPath: backupPath) else {
+            logger.info("No hosts backup found, nothing to restore")
+            return
+        }
+        
+        do {
+            let script = """
+            do shell script "cp '\(backupPath)' /etc/hosts" without altering line endings
+            """
+            
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+            task.arguments = ["-e", script]
+            
+            try task.run()
+            task.waitUntilExit()
+            
+            if task.terminationStatus == 0 {
+                try FileManager.default.removeItem(atPath: backupPath)
+                logger.info("Hosts file restored on app exit")
+            }
+        } catch {
+            logger.error("Failed to restore hosts file on exit: \(error)")
+        }
     }
     
     /// Check if a URL should be blocked
@@ -83,104 +138,75 @@ class BlockingEngine: ObservableObject {
         currentBlockedWebsites = blockedWebsites
         
         if !blockedWebsites.isEmpty {
-            // Use hosts file for simple domain blocking
-            try await hostsFileManager.blockDomains(Array(blockedWebsites))
+            // Start local server to serve stoic quotes
+            try await localServer.start()
+            
+            // Set up one-time hosts file redirect to localhost (requires admin once)
+            try await setupInitialHostsRedirect(for: Array(blockedWebsites))
+        }
+    }
+    
+    private func setupInitialHostsRedirect(for domains: [String]) async throws {
+        // Only modify hosts file once per app session, not every focus session
+        let hostsPath = "/etc/hosts"
+        let backupPath = "/tmp/fuego_hosts_backup"
+        
+        // Check if we already have our entries
+        let currentContent = try String(contentsOfFile: hostsPath)
+        if currentContent.contains("# Fuego Focus App") {
+            logger.info("Hosts file already configured for Fuego")
+            return
+        }
+        
+        // Backup original hosts file
+        try currentContent.write(toFile: backupPath, atomically: true, encoding: .utf8)
+        
+        // Add entries to redirect to localhost:8080
+        var newContent = currentContent
+        newContent += "\n# Fuego Focus App - START\n"
+        
+        for domain in domains {
+            newContent += "127.0.0.1 \(domain)\n"
+            newContent += "127.0.0.1 www.\(domain)\n"
+        }
+        
+        newContent += "# Fuego Focus App - END\n"
+        
+        // Write with admin privileges (one-time setup)
+        try await writeHostsFileOneTime(content: newContent)
+        logger.info("Hosts file configured to redirect \(domains.count) domains to local server")
+    }
+    
+    private func writeHostsFileOneTime(content: String) async throws {
+        let tempPath = "/tmp/fuego_new_hosts"
+        try content.write(toFile: tempPath, atomically: true, encoding: .utf8)
+        
+        let script = """
+        do shell script "cp '\(tempPath)' /etc/hosts" with administrator privileges
+        """
+        
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        task.arguments = ["-e", script]
+        
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = pipe
+        
+        try task.run()
+        task.waitUntilExit()
+        
+        try? FileManager.default.removeItem(atPath: tempPath)
+        
+        if task.terminationStatus != 0 {
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let error = String(data: data, encoding: .utf8) ?? "Unknown error"
+            logger.error("Failed to write hosts file: \(error)")
+            throw BlockingError.hostsFileWriteError
         }
     }
     
     // Network extension filtering removed for simplicity
-}
-
-// MARK: - Hosts File Management
-
-class HostsFileManager {
-    private let logger = Logger(label: "com.fuego.hosts")
-    private let hostsPath = "/etc/hosts"
-    private let backupPath = "/tmp/fuego_hosts_backup"
-    private let fuegoMarker = "# Fuego Focus App"
-    
-    func blockDomains(_ domains: [String]) async throws {
-        logger.info("Blocking domains via hosts file: \(domains)")
-        
-        // Backup original hosts file
-        try await backupHostsFile()
-        
-        // Read current hosts content
-        let currentContent = try String(contentsOfFile: hostsPath)
-        
-        // Remove any existing Fuego entries
-        let cleanedContent = removeExistingFuegoEntries(from: currentContent)
-        
-        // Add new blocking entries
-        var newContent = cleanedContent
-        newContent += "\n\(fuegoMarker) - START\n"
-        
-        for domain in domains {
-            newContent += "0.0.0.0 \(domain)\n"
-            newContent += "0.0.0.0 www.\(domain)\n"
-        }
-        
-        newContent += "\(fuegoMarker) - END\n"
-        
-        // Write updated hosts file (requires admin privileges)
-        try await writeHostsFile(content: newContent)
-        
-        logger.info("Successfully blocked \(domains.count) domains")
-    }
-    
-    func restoreHostsFile() async {
-        do {
-            if FileManager.default.fileExists(atPath: backupPath) {
-                let backupContent = try String(contentsOfFile: backupPath)
-                try await writeHostsFile(content: backupContent)
-                try FileManager.default.removeItem(atPath: backupPath)
-                logger.info("Hosts file restored from backup")
-            } else {
-                // Remove only Fuego entries
-                let currentContent = try String(contentsOfFile: hostsPath)
-                let cleanedContent = removeExistingFuegoEntries(from: currentContent)
-                try await writeHostsFile(content: cleanedContent)
-                logger.info("Fuego entries removed from hosts file")
-            }
-        } catch {
-            logger.error("Failed to restore hosts file: \(error)")
-        }
-    }
-    
-    private func backupHostsFile() async throws {
-        let content = try String(contentsOfFile: hostsPath)
-        try content.write(toFile: backupPath, atomically: true, encoding: .utf8)
-    }
-    
-    private func writeHostsFile(content: String) async throws {
-        // This requires admin privileges - would need to use AuthorizationServices
-        // or have the user run the app with sudo (not recommended for production)
-        try content.write(toFile: hostsPath, atomically: true, encoding: .utf8)
-    }
-    
-    private func removeExistingFuegoEntries(from content: String) -> String {
-        let lines = content.components(separatedBy: .newlines)
-        var filteredLines: [String] = []
-        var inFuegoSection = false
-        
-        for line in lines {
-            if line.contains("\(fuegoMarker) - START") {
-                inFuegoSection = true
-                continue
-            }
-            
-            if line.contains("\(fuegoMarker) - END") {
-                inFuegoSection = false
-                continue
-            }
-            
-            if !inFuegoSection {
-                filteredLines.append(line)
-            }
-        }
-        
-        return filteredLines.joined(separator: "\n")
-    }
 }
 
 // MARK: - App Blocking Management
@@ -220,10 +246,10 @@ class AppBlockingManager {
             guard let self = self, self.isBlocking else { return }
             
             if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-               let bundleIdentifier = app.bundleIdentifier {
+               let appName = app.localizedName {
                 
-                if self.monitoredApps.contains(bundleIdentifier) {
-                    self.logger.info("Terminating blocked app: \(bundleIdentifier)")
+                if self.monitoredApps.contains(appName) {
+                    self.logger.info("Terminating blocked app: \(appName)")
                     app.terminate()
                 }
             }
@@ -242,9 +268,9 @@ class AppBlockingManager {
         let runningApps = NSWorkspace.shared.runningApplications
         
         for app in runningApps {
-            if let bundleIdentifier = app.bundleIdentifier,
-               blockedApps.contains(bundleIdentifier) {
-                logger.info("Terminating running blocked app: \(bundleIdentifier)")
+            if let appName = app.localizedName,
+               blockedApps.contains(appName) {
+                logger.info("Terminating running blocked app: \(appName)")
                 app.terminate()
             }
         }

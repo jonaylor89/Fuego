@@ -27,7 +27,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2024 Fuego. All rights reserved.</string>
+	<string>Copyright © 2025 Fuego. All rights reserved.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -35,8 +35,6 @@
 		<key>NSExceptionDomains</key>
 		<dict/>
 	</dict>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>Fuego uses AppleScript automation to help manage your focus sessions by controlling other applications and system settings.</string>
 	<key>NSSystemAdministrationUsageDescription</key>
 	<string>Fuego needs administrator privileges to block websites and applications during focus sessions.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

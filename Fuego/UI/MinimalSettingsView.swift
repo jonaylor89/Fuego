@@ -280,12 +280,25 @@ struct MinimalSettingsView: View {
 
                                 Spacer()
 
+                                Button("debug setup") {
+                                    Task {
+                                        await debugNetworkExtensionSetup()
+                                    }
+                                }
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundColor(.orange)
+                                .buttonStyle(.plain)
+                            }
+
+                            HStack {
                                 Button("open settings") {
                                     openNetworkExtensionSettings()
                                 }
                                 .font(.system(.caption, design: .monospaced))
                                 .foregroundColor(.secondary)
                                 .buttonStyle(.plain)
+
+                                Spacer()
                             }
 
                             // Debug info
@@ -383,43 +396,35 @@ struct MinimalSettingsView: View {
 
     private func setupNetworkExtensionWithFeedback() async {
         do {
-            try await core.requestNetworkExtensionSetup()
+            // Use the simplified Network Extension approach
+            if let blockingEngine = core.blockingEngine as? NetworkExtensionBlockingEngine {
+                try await blockingEngine.networkExtension.setupWithUserGuidance()
+            } else {
+                try await core.requestNetworkExtensionSetup()
+            }
 
             // Wait for status to update
-            try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+            try await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
             await core.blockingEngine.checkExtensionStatus()
 
-            DispatchQueue.main.async {
-                let alert = NSAlert()
-                if self.core.networkExtensionStatus == "Active" {
-                    alert.messageText = "Network Extension Setup Complete"
-                    alert.informativeText =
-                        "The Network Extension is now configured and ready to use."
-                    alert.alertStyle = .informational
-                } else {
-                    alert.messageText = "Network Extension Setup"
-                    alert.informativeText = """
-                        Extension setup initiated. If it doesn't appear in System Settings:
-
-                        1. Wait 30 seconds and check again
-                        2. Try the "force register" button
-                        3. Check System Settings → General → Login Items & Extensions
-                        4. Look for "Fuego Content Filter" under Network Extensions
-                        """
-                    alert.alertStyle = .warning
-                }
-                alert.addButton(withTitle: "OK")
-                alert.runModal()
-            }
         } catch {
             DispatchQueue.main.async {
                 let alert = NSAlert()
                 alert.messageText = "Network Extension Setup Failed"
                 alert.informativeText =
-                    "Error: \(error.localizedDescription)\n\nTry using the 'force register' option or check System Settings manually."
+                    "Error: \(error.localizedDescription)\n\nTry the following:\n• Check System Settings → General → Login Items & Extensions → Network Extensions\n• Look for 'Fuego Content Filter' and enable it\n• Restart the app if needed"
                 alert.alertStyle = .critical
+                alert.addButton(withTitle: "Open System Settings")
                 alert.addButton(withTitle: "OK")
-                alert.runModal()
+
+                let response = alert.runModal()
+                if response == .alertFirstButtonReturn {
+                    if let url = URL(
+                        string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")
+                    {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
             }
         }
     }
@@ -473,6 +478,103 @@ struct MinimalSettingsView: View {
                 let alert = NSAlert()
                 alert.messageText = "Force Registration Failed"
                 alert.informativeText = "Error: \(error.localizedDescription)"
+                alert.alertStyle = .critical
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
+        }
+    }
+
+    private func debugNetworkExtensionSetup() async {
+        print("🔧 DEBUG: Starting Network Extension setup debug...")
+
+        do {
+            // Direct access to the network extension manager
+            let manager = NEFilterManager.shared()
+            print("🔧 DEBUG: Got NEFilterManager instance")
+
+            // Load preferences first
+            try await manager.loadFromPreferences()
+            print("🔧 DEBUG: Loaded preferences")
+            print("🔧 DEBUG: Current isEnabled: \(manager.isEnabled)")
+            print("🔧 DEBUG: Has configuration: \(manager.providerConfiguration != nil)")
+
+            if let config = manager.providerConfiguration {
+                print("🔧 DEBUG: Existing config: \(config)")
+            }
+
+            // Create a new configuration manually
+            print("🔧 DEBUG: Creating new NEFilterProviderConfiguration...")
+            let configuration = NEFilterProviderConfiguration()
+            configuration.username = "Fuego User"
+            configuration.organization = "Fuego Focus App"
+            configuration.filterSockets = true
+            configuration.filterPackets = false
+            configuration.vendorConfiguration = [:]
+            print("🔧 DEBUG: Configuration created")
+
+            manager.providerConfiguration = configuration
+            manager.localizedDescription = "Fuego Content Filter"
+            manager.isEnabled = true
+
+            print("🔧 DEBUG: Configuration assigned to manager")
+            print("🔧 DEBUG: Manager isEnabled: \(manager.isEnabled)")
+            print("🔧 DEBUG: Manager description: \(manager.localizedDescription ?? "nil")")
+
+            // Try to save to preferences
+            print("🔧 DEBUG: Attempting to save to preferences...")
+            try await manager.saveToPreferences()
+            print("🔧 DEBUG: ✅ saveToPreferences() succeeded!")
+
+            // Wait and reload to check if it persisted
+            try await Task.sleep(nanoseconds: 2_000_000_000)
+            print("🔧 DEBUG: Reloading preferences after save...")
+            try await manager.loadFromPreferences()
+
+            print("🔧 DEBUG: After save - isEnabled: \(manager.isEnabled)")
+            print("🔧 DEBUG: After save - has config: \(manager.providerConfiguration != nil)")
+            print("🔧 DEBUG: After save - description: \(manager.localizedDescription ?? "nil")")
+
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = "Debug Setup Complete"
+                alert.informativeText = """
+                    ✅ NEFilterManager.saveToPreferences() succeeded!
+
+                    Extension enabled: \(manager.isEnabled)
+                    Has config: \(manager.providerConfiguration != nil)
+
+                    Check System Settings → General → Login Items & Extensions → Network Extensions
+                    """
+                alert.alertStyle = .informational
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
+
+        } catch {
+            print("🔧 DEBUG: ❌ Setup failed with error: \(error)")
+            print("🔧 DEBUG: Error type: \(type(of: error))")
+            print("🔧 DEBUG: Error domain: \((error as NSError).domain)")
+            print("🔧 DEBUG: Error code: \((error as NSError).code)")
+            print("🔧 DEBUG: Error userInfo: \((error as NSError).userInfo)")
+
+            if let neError = error as? NEVPNError {
+                print("🔧 DEBUG: NEVPNError code: \((neError as NSError).code)")
+                print("🔧 DEBUG: NEVPNError description: \(neError.localizedDescription)")
+            }
+
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = "Debug Setup Failed"
+                alert.informativeText = """
+                    ❌ NEFilterManager.saveToPreferences() failed!
+
+                    Error: \(error.localizedDescription)
+                    Domain: \((error as NSError).domain)
+                    Code: \((error as NSError).code)
+
+                    Check Xcode console for detailed logs.
+                    """
                 alert.alertStyle = .critical
                 alert.addButton(withTitle: "OK")
                 alert.runModal()

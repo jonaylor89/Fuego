@@ -5,7 +5,7 @@ import os.log
 
 /// Shared storage mechanism for communicating blocklist between main app and extension
 class SharedBlocklist {
-    private let logger = Logger(subsystem: "dev.getfuego.FuegoFocus", category: "SharedBlocklist")
+    private let logger = OSLog(subsystem: "dev.getfuego.FuegoFocus", category: "SharedBlocklist")
     private let userDefaults = UserDefaults(suiteName: "group.dev.getfuego.FuegoFocus")
 
     // MARK: - Storage Keys
@@ -32,7 +32,7 @@ class SharedBlocklist {
             guard let data = try? JSONEncoder().encode(newValue) else { return }
             userDefaults?.set(data, forKey: StorageKeys.blockedDomains)
             userDefaults?.set(Date(), forKey: StorageKeys.lastUpdated)
-            logger.info("Updated blocked domains: \(newValue.count) domains")
+            os_log("Updated blocked domains: %d domains", log: logger, type: .info, newValue.count)
         }
     }
 
@@ -43,59 +43,64 @@ class SharedBlocklist {
         set {
             userDefaults?.set(newValue, forKey: StorageKeys.isFilteringEnabled)
             userDefaults?.set(Date(), forKey: StorageKeys.lastUpdated)
-            logger.info("Filtering enabled: \(newValue)")
+            os_log("Filtering enabled: %{public}@", log: logger, type: .info, String(newValue))
         }
     }
 
     // MARK: - Public Methods
 
     func loadBlocklist() {
-        logger.info("Loading blocklist from shared storage")
+        os_log("Loading blocklist from shared storage", log: logger, type: .info)
         let domains = blockedDomains
         let enabled = isFilteringEnabled
-        logger.info("Loaded \(domains.count) blocked domains, filtering enabled: \(enabled)")
+        os_log(
+            "Loaded %d blocked domains, filtering enabled: %{public}@", log: logger, type: .info,
+            domains.count, String(enabled))
     }
 
     func updateBlocklist(_ domains: Set<String>, enabled: Bool) {
         blockedDomains = domains
         isFilteringEnabled = enabled
-        logger.info("Updated blocklist with \(domains.count) domains, enabled: \(enabled)")
+        os_log(
+            "Updated blocklist with %d domains, enabled: %{public}@", log: logger, type: .info,
+            domains.count, String(enabled))
     }
 
     func startMonitoring(onChange: @escaping () -> Void) {
-        logger.info("Started monitoring shared preferences for changes")
+        os_log("Started monitoring shared preferences for changes", log: logger, type: .info)
         // Simplified monitoring for Network Extension
         // Real file monitoring would be more complex in this context
     }
 
     func stopMonitoring() {
-        logger.info("Stopped monitoring shared preferences")
+        os_log("Stopped monitoring shared preferences", log: logger, type: .info)
         // Cleanup monitoring resources
     }
 }
 
 /// Content Filter Provider that intercepts network requests and blocks based on domain
 class FilterProvider: NEFilterDataProvider {
-    private let logger = Logger(subsystem: "dev.getfuego.FuegoFocus", category: "FilterProvider")
+    private let logger = OSLog(subsystem: "dev.getfuego.FuegoFocus", category: "FilterProvider")
     private var sharedStorage: SharedBlocklist
 
     override init() {
         self.sharedStorage = SharedBlocklist()
         super.init()
-        logger.info("FilterProvider initialized")
+        os_log("FilterProvider initialized", log: logger, type: .info)
     }
 
     // MARK: - NEFilterDataProvider Override Methods
 
     override func startFilter(completionHandler: @escaping (Error?) -> Void) {
-        logger.info("Starting content filter")
+        os_log("Starting content filter", log: logger, type: .info)
 
         // Load initial blocklist from shared storage
         sharedStorage.loadBlocklist()
 
         // Set up monitoring for blocklist changes
         sharedStorage.startMonitoring { [weak self] in
-            self?.logger.info("Blocklist updated from main app")
+            guard let self = self else { return }
+            os_log("Blocklist updated from main app", log: self.logger, type: .info)
         }
 
         completionHandler(nil)
@@ -104,7 +109,7 @@ class FilterProvider: NEFilterDataProvider {
     override func stopFilter(
         with reason: NEProviderStopReason, completionHandler: @escaping () -> Void
     ) {
-        logger.info("Stopping content filter, reason: \(reason.rawValue)")
+        os_log("Stopping content filter, reason: %d", log: logger, type: .info, reason.rawValue)
         sharedStorage.stopMonitoring()
         completionHandler()
     }
@@ -119,7 +124,7 @@ class FilterProvider: NEFilterDataProvider {
         let domain = extractDomain(from: flow)
 
         if shouldBlockDomain(domain) {
-            logger.info("Blocking request to: \(domain)")
+            os_log("Blocking request to: %{public}@", log: logger, type: .info, domain)
 
             // For blocked domains, we need to filter the data to inject our response
             return .filterDataVerdict(
@@ -137,7 +142,9 @@ class FilterProvider: NEFilterDataProvider {
         let domain = extractDomain(from: flow)
 
         if shouldBlockDomain(domain) {
-            logger.info("Injecting custom response for blocked domain: \(domain)")
+            os_log(
+                "Injecting custom response for blocked domain: %{public}@", log: logger,
+                type: .info, domain)
 
             // For now, just drop the connection for blocked domains
             // Note: Custom response injection is complex with NEFilterDataProvider

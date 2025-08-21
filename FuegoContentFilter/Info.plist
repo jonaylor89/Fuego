@@ -29,6 +29,8 @@
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).FilterProvider</string>
 	</dict>
+	<key>NSSystemExtensionUsageDescription</key>
+	<string>Fuego uses a system extension to block distracting websites during focus sessions, helping you maintain concentration.</string>
 	<key>NSNetworkExtensionUsageDescription</key>
 	<string>Fuego uses a network extension to block distracting websites during focus sessions, helping you maintain concentration.</string>
 </dict>

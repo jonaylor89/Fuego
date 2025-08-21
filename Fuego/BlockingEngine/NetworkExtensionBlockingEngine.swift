@@ -4,131 +4,6 @@ import Foundation
 import Logging
 import NetworkExtension
 
-// MARK: - Extension Manager for Main App
-
-/// Manages the Network Extension from the main app
-@MainActor
-class NetworkExtensionManager: ObservableObject {
-    private let logger = Logger(label: "dev.getfuego.blocking.extensionmanager")
-    private let sharedStorage = SharedBlocklist()
-
-    @Published var isExtensionEnabled = false
-    @Published var extensionStatus: String = "Unknown"
-
-    func setupExtension() async throws {
-        logger.info("Setting up network extension")
-
-        let manager = NEFilterManager.shared()
-
-        try await manager.loadFromPreferences()
-
-        if manager.providerConfiguration == nil {
-            // Create new configuration
-            let configuration = NEFilterProviderConfiguration()
-            configuration.username = "Fuego User"
-            configuration.organization = "Fuego Focus App"
-            configuration.filterSockets = true
-            configuration.filterPackets = false  // Only filter at socket level
-            configuration.vendorConfiguration = [:]
-
-            manager.providerConfiguration = configuration
-            manager.localizedDescription = "Fuego Content Filter"
-            manager.isEnabled = true
-
-            try await manager.saveToPreferences()
-            logger.info("Network extension configuration saved")
-
-            // Wait a moment for the system to process the configuration
-            try await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
-        }
-
-        await updateStatus()
-    }
-
-    func enableExtension() async throws {
-        logger.info("Enabling network extension")
-
-        let manager = NEFilterManager.shared()
-        try await manager.loadFromPreferences()
-
-        if manager.providerConfiguration == nil {
-            throw NetworkExtensionError.extensionNotAvailable
-        }
-
-        manager.isEnabled = true
-        try await manager.saveToPreferences()
-
-        // Update shared storage
-        let currentDomains = sharedStorage.blockedDomains
-        sharedStorage.updateBlocklist(currentDomains, enabled: true)
-
-        await updateStatus()
-
-        // Log configuration details for debugging
-        logger.info(
-            "Extension enabled - Bundle ID: \(manager.providerConfiguration?.filterDataProviderBundleIdentifier ?? "Unknown")"
-        )
-    }
-
-    func disableExtension() async throws {
-        logger.info("Disabling network extension")
-
-        let manager = NEFilterManager.shared()
-        try await manager.loadFromPreferences()
-
-        manager.isEnabled = false
-        try await manager.saveToPreferences()
-
-        // Update shared storage
-        sharedStorage.isFilteringEnabled = false
-
-        await updateStatus()
-    }
-
-    func updateBlocklist(_ domains: Set<String>) {
-        logger.info("Updating blocklist with \(domains.count) domains")
-        sharedStorage.updateBlocklist(domains, enabled: isExtensionEnabled)
-    }
-
-    func updateStatus() async {
-        let manager = NEFilterManager.shared()
-
-        do {
-            try await manager.loadFromPreferences()
-            isExtensionEnabled = manager.isEnabled
-
-            if manager.providerConfiguration == nil {
-                extensionStatus = "Not Configured"
-            } else if manager.isEnabled {
-                extensionStatus = "Active"
-            } else {
-                extensionStatus = "Disabled"
-            }
-        } catch {
-            extensionStatus = "Error: \(error.localizedDescription)"
-            logger.error("Failed to update extension status: \(error)")
-        }
-    }
-
-    func requestPermissions() async throws {
-        logger.info("Requesting network extension permissions")
-
-        do {
-            // This will trigger the system dialog for Network Extension permissions
-            try await setupExtension()
-            try await enableExtension()
-
-            // Force a status update
-            await updateStatus()
-
-            logger.info("Network extension setup completed successfully")
-        } catch {
-            logger.error("Failed to set up network extension: \(error)")
-            throw error
-        }
-    }
-}
-
 // MARK: - Shared Storage Helper
 
 /// Shared storage mechanism for communicating blocklist between main app and extension
@@ -182,7 +57,7 @@ class SharedBlocklist {
     }
 }
 
-/// Enhanced blocking engine that uses Network Extension for robust content filtering
+/// Enhanced blocking engine that uses System Extension + Network Extension for robust content filtering
 @MainActor
 class NetworkExtensionBlockingEngine: ObservableObject {
     private let logger = Logger(label: "dev.getfuego.blocking.networkextension")
@@ -191,21 +66,22 @@ class NetworkExtensionBlockingEngine: ObservableObject {
     @Published var currentBlockedWebsites: Set<String> = []
     @Published var extensionStatus: String = "Unknown"
 
-    private var networkExtensionManager: NetworkExtensionManager
+    private var networkExtensionManager: SimpleNetworkExtensionManager
     private var appBlockingManager: AppBlockingManager
+    private let sharedStorage = SharedBlocklist()
 
     init() {
-        self.networkExtensionManager = NetworkExtensionManager()
+        self.networkExtensionManager = SimpleNetworkExtensionManager()
         self.appBlockingManager = AppBlockingManager()
 
-        // Observe extension status changes
-        networkExtensionManager.$extensionStatus
+        // Observe network extension status changes
+        networkExtensionManager.$statusMessage
             .assign(to: &$extensionStatus)
 
         networkExtensionManager.$isExtensionEnabled
             .assign(to: &$isActive)
 
-        logger.info("Network Extension blocking engine initialized")
+        logger.info("Network Extension blocking engine initialized with simplified approach")
     }
 
     // MARK: - Public Interface
@@ -216,13 +92,13 @@ class NetworkExtensionBlockingEngine: ObservableObject {
         logger.info("Applying blocking rules via Network Extension")
 
         do {
-            // Always check status first
+            // Check network extension status first
             await networkExtensionManager.updateStatus()
 
-            // Ensure Network Extension is set up and enabled
-            if !networkExtensionManager.isExtensionEnabled {
-                logger.info("Extension not enabled, requesting permissions")
-                try await networkExtensionManager.requestPermissions()
+            // Ensure Network Extension is configured
+            if networkExtensionManager.extensionStatus == "Not Configured" {
+                logger.info("Network Extension not configured, setting up")
+                try await networkExtensionManager.setupNetworkExtension()
             }
 
             // Update the blocklist in shared storage
@@ -278,7 +154,12 @@ class NetworkExtensionBlockingEngine: ObservableObject {
     /// Request initial setup of Network Extension
     func requestInitialSetup() async throws {
         logger.info("Requesting initial Network Extension setup")
-        try await networkExtensionManager.requestPermissions()
+        try await networkExtensionManager.setupWithUserGuidance()
+    }
+
+    /// Get the network extension manager for UI binding
+    var networkExtension: SimpleNetworkExtensionManager {
+        return networkExtensionManager
     }
 
     // MARK: - Private Methods
@@ -292,23 +173,23 @@ class NetworkExtensionBlockingEngine: ObservableObject {
                 let alert = NSAlert()
                 alert.messageText = "Network Extension Setup Required"
                 alert.informativeText = """
-                    Fuego needs to set up a Network Extension for website blocking.
+                    Fuego needs to configure a Network Extension for website blocking.
 
-                    After clicking "Open Settings":
-                    1. Go to System Settings → General → Login Items & Extensions
-                    2. Look for "Network Extensions" section
-                    3. Enable "Fuego Content Filter" if it appears
-                    4. Return to Fuego and try again
+                    Steps:
+                    1. Click "Setup Network Extension" in the app
+                    2. Enable the extension in System Settings → General → Login Items & Extensions → Network Extensions
+                    3. Look for "Fuego Content Filter" and enable it
+                    4. Return to Fuego to start filtering
 
-                    Note: The extension may take a moment to appear in System Settings.
+                    The network extension provides robust content filtering.
                     """
                 alert.alertStyle = .informational
-                alert.addButton(withTitle: "Open Settings")
+                alert.addButton(withTitle: "Open System Settings")
                 alert.addButton(withTitle: "Cancel")
 
                 let response = alert.runModal()
                 if response == .alertFirstButtonReturn {
-                    // Open System Settings to Login Items & Extensions
+                    // Open System Settings to Network Extensions
                     if let url = URL(
                         string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")
                     {
@@ -326,26 +207,15 @@ extension NetworkExtensionBlockingEngine {
 
     /// Get a user-friendly description of the current status
     var statusDescription: String {
-        switch extensionStatus {
-        case "Active":
-            return isActive ? "🟢 Network blocking active" : "🟡 Extension enabled, filtering paused"
-        case "Disabled":
-            return "🔴 Network extension disabled"
-        case "Not Configured":
-            return "⚪ Extension not configured"
-        default:
-            return "⚪ \(extensionStatus)"
-        }
+        return networkExtensionManager.statusDescription
     }
 
     /// Get detailed status information for debugging
     var detailedStatus: [String: Any] {
-        return [
-            "extensionEnabled": networkExtensionManager.isExtensionEnabled,
-            "filteringActive": isActive,
-            "blockedDomainsCount": currentBlockedWebsites.count,
-            "extensionStatus": extensionStatus,
-        ]
+        var status = networkExtensionManager.detailedStatus
+        status["filteringActive"] = isActive
+        status["blockedDomainsCount"] = currentBlockedWebsites.count
+        return status
     }
 }
 

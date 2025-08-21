@@ -87,7 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         Task {
             await fuegoCore?.blockingEngine.cleanup()
-            await fuegoCore?.shutdown()
+            fuegoCore?.shutdown()
         }
     }
 }

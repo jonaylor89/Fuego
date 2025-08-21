@@ -1,0 +1,101 @@
+/* Simple, clean styles inspired by Freewrite */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #fff;
+    font-size: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.content {
+    max-width: none;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: normal;
+    margin: 2rem 0 1rem 0;
+    color: #000;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: normal;
+    margin: 2rem 0 1rem 0;
+    color: #000;
+}
+
+p {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+a {
+    color: #0066cc;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #004499;
+}
+
+strong {
+    font-weight: 600;
+}
+
+/* Top navigation links */
+.content > p:first-child {
+    margin-bottom: 3rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+
+
+/* Download section emphasis */
+#download + p strong a {
+    font-size: 1.1rem;
+    color: #000;
+    text-decoration: none;
+    border-bottom: 2px solid #0066cc;
+}
+
+#download + p strong a:hover {
+    border-bottom-color: #004499;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+    body {
+        padding: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Focus on readability */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #fff;
+        color: #333;
+    }
+    
+    h1, h2 {
+        color: #000;
+    }
+}

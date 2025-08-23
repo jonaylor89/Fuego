@@ -32,7 +32,7 @@ class SimpleNetworkExtensionManager: NSObject, ObservableObject {
 
     /// Setup and activate the Network Extension
     func setupNetworkExtension() async throws {
-        os_log("🚀 Setting up Network Extension", log: logger, type: .info)
+        os_log("Setting up Network Extension", log: logger, type: .info)
 
         guard !isConfiguring else {
             os_log("Extension configuration already in progress", log: logger, type: .default)
@@ -87,11 +87,11 @@ class SimpleNetworkExtensionManager: NSObject, ObservableObject {
             // Update status
             await updateStatus()
 
-            os_log("✅ Network Extension setup completed successfully", log: logger, type: .info)
+            os_log("Network Extension setup completed successfully", log: logger, type: .info)
 
         } catch {
             os_log(
-                "❌ Failed to setup Network Extension: %{public}@", log: logger, type: .error,
+                "Failed to setup Network Extension: %{public}@", log: logger, type: .error,
                 error.localizedDescription)
 
             DispatchQueue.main.async {
@@ -122,7 +122,7 @@ class SimpleNetworkExtensionManager: NSObject, ObservableObject {
 
         await updateStatus()
 
-        os_log("✅ Network Extension enabled", log: logger, type: .info)
+        os_log("Network Extension enabled", log: logger, type: .info)
     }
 
     /// Disable the Network Extension
@@ -140,14 +140,43 @@ class SimpleNetworkExtensionManager: NSObject, ObservableObject {
 
         await updateStatus()
 
-        os_log("✅ Network Extension disabled", log: logger, type: .info)
+        os_log("Network Extension disabled", log: logger, type: .info)
     }
 
     /// Update the blocklist for filtering
-    func updateBlocklist(_ domains: Set<String>) {
-        os_log("Updating blocklist with %d domains", log: logger, type: .info, domains.count)
+    func updateBlocklist(_ domains: Set<String>, enableFiltering: Bool = true) {
+        os_log("Updating blocklist with %d domains, filtering enabled: %{public}@", log: logger, type: .info, domains.count, String(enableFiltering))
 
-        sharedStorage.updateBlocklist(domains, enabled: isExtensionEnabled)
+        // Always enable filtering when domains are provided and enableFiltering is true
+        sharedStorage.updateBlocklist(domains, enabled: enableFiltering && !domains.isEmpty)
+
+        // Notify the extension to reload the blocklist
+        Task {
+            await notifyExtensionToReload()
+        }
+    }
+
+    /// Notify the extension to reload its configuration
+    private func notifyExtensionToReload() async {
+        os_log("Notifying Network Extension to reload configuration", log: logger, type: .info)
+
+        do {
+            let manager = NEFilterManager.shared()
+            try await manager.loadFromPreferences()
+
+            // Toggle the configuration to force a reload
+            // This is a workaround to notify the extension of changes
+            if manager.isEnabled {
+                os_log("Extension is enabled, triggering reload", log: logger, type: .info)
+
+                // Save preferences again to trigger a notification to the extension
+                try await manager.saveToPreferences()
+
+                os_log("Extension reload notification sent", log: logger, type: .info)
+            }
+        } catch {
+            os_log("Failed to notify extension: %{public}@", log: logger, type: .error, error.localizedDescription)
+        }
     }
 
     /// Check and update the current status of the Network Extension
@@ -281,15 +310,15 @@ class SimpleNetworkExtensionManager: NSObject, ObservableObject {
     var statusDescription: String {
         switch extensionStatus {
         case "Active":
-            return "🟢 Network filtering active"
+            return "Network filtering active"
         case "Disabled":
-            return "🟡 Extension configured, needs enabling"
+            return "Extension configured, needs enabling"
         case "Not Configured":
-            return "⚪ Extension needs setup"
+            return "Extension needs setup"
         case "Error":
-            return "❌ Extension error"
+            return "Extension error"
         default:
-            return "⚪ \(extensionStatus)"
+            return "\(extensionStatus)"
         }
     }
 

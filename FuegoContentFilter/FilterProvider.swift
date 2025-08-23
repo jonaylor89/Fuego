@@ -97,13 +97,56 @@ class FilterProvider: NEFilterDataProvider {
         // Load initial blocklist from shared storage
         sharedStorage.loadBlocklist()
 
-        // Set up monitoring for blocklist changes
-        sharedStorage.startMonitoring { [weak self] in
-            guard let self = self else { return }
-            os_log("Blocklist updated from main app", log: self.logger, type: .info)
+        // Log initial state
+        let domains = sharedStorage.blockedDomains
+        let enabled = sharedStorage.isFilteringEnabled
+        os_log("Initial state - Domains: %d, Filtering enabled: %{public}@", log: logger, type: .info, domains.count, String(enabled))
+
+        if enabled {
+            os_log("Blocked domains: %{public}@", log: logger, type: .info, domains.joined(separator: ", "))
         }
 
+        // Set up monitoring for blocklist changes via Darwin notifications
+        setupBlocklistChangeMonitoring()
+
         completionHandler(nil)
+    }
+
+    private func setupBlocklistChangeMonitoring() {
+        // Use Darwin notifications to listen for changes from main app
+        let notificationName = "dev.getfuego.blocklist.updated" as CFString
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+
+        let observer = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
+
+        CFNotificationCenterAddObserver(
+            center,
+            observer,
+            { (center, observer, name, object, userInfo) in
+                guard let observer = observer else { return }
+                let provider = Unmanaged<FilterProvider>.fromOpaque(observer).takeUnretainedValue()
+                provider.reloadBlocklist()
+            },
+            notificationName,
+            nil,
+            .deliverImmediately
+        )
+
+        os_log("Darwin notification observer registered for blocklist changes", log: logger, type: .info)
+    }
+
+    private func reloadBlocklist() {
+        os_log("Reloading blocklist from shared storage", log: logger, type: .info)
+
+        sharedStorage.loadBlocklist()
+        let domains = sharedStorage.blockedDomains
+        let enabled = sharedStorage.isFilteringEnabled
+
+        os_log("Blocklist reloaded - Domains: %d, Filtering enabled: %{public}@", log: logger, type: .info, domains.count, String(enabled))
+
+        if enabled {
+            os_log("Updated blocked domains: %{public}@", log: logger, type: .info, domains.joined(separator: ", "))
+        }
     }
 
     override func stopFilter(
@@ -126,10 +169,9 @@ class FilterProvider: NEFilterDataProvider {
         if shouldBlockDomain(domain) {
             os_log("Blocking request to: %{public}@", log: logger, type: .info, domain)
 
-            // For blocked domains, we need to filter the data to inject our response
-            return .filterDataVerdict(
-                withFilterInbound: true, peekInboundBytes: 8192, filterOutbound: false,
-                peekOutboundBytes: 0)
+            // Drop the connection for blocked domains
+            // This is the most reliable approach for NEFilterDataProvider
+            return .drop()
         }
 
         // Allow the request
@@ -139,19 +181,8 @@ class FilterProvider: NEFilterDataProvider {
     override func handleInboundData(
         from flow: NEFilterFlow, readBytesStartOffset offset: Int, readBytes: Data
     ) -> NEFilterDataVerdict {
-        let domain = extractDomain(from: flow)
-
-        if shouldBlockDomain(domain) {
-            os_log(
-                "Injecting custom response for blocked domain: %{public}@", log: logger,
-                type: .info, domain)
-
-            // For now, just drop the connection for blocked domains
-            // Note: Custom response injection is complex with NEFilterDataProvider
-            // and might require a different approach like a local proxy server
-            return .drop()
-        }
-
+        // Since we're dropping connections in handleNewFlow, this shouldn't be called
+        // for blocked domains, but we'll keep it as a safety check
         return .allow()
     }
 
@@ -164,17 +195,37 @@ class FilterProvider: NEFilterDataProvider {
     // MARK: - Domain Filtering Logic
 
     private func extractDomain(from flow: NEFilterFlow) -> String {
-        // For socket flows, extract hostname from flow description
+        // Try to extract hostname from NEFilterSocketFlow
         if let socketFlow = flow as? NEFilterSocketFlow {
+            // Try to get remote hostname directly if available
+            if let remoteHostname = socketFlow.remoteHostname, !remoteHostname.isEmpty {
+                os_log("Extracted hostname from remoteHostname: %{public}@", log: logger, type: .debug, remoteHostname)
+                return remoteHostname
+            }
+
+            // Try to extract from URL (for browser flows)
+            if let url = socketFlow.url {
+                if let host = url.host, !host.isEmpty {
+                    os_log("Extracted hostname from URL: %{public}@", log: logger, type: .debug, host)
+                    return host
+                }
+            }
+
+            // Fallback: Parse from flow description
             let flowDescription = String(describing: socketFlow)
+            os_log("Flow description: %{public}@", log: logger, type: .debug, flowDescription)
 
             // Look for hostname patterns in the description
             if let range = flowDescription.range(of: "hostname: ") {
                 let hostnamePart = String(flowDescription[range.upperBound...])
                 if let endRange = hostnamePart.range(of: " ") {
-                    return String(hostnamePart[..<endRange.lowerBound])
+                    let hostname = String(hostnamePart[..<endRange.lowerBound])
+                    os_log("Extracted hostname from description (method 1): %{public}@", log: logger, type: .debug, hostname)
+                    return hostname
                 } else if let endRange = hostnamePart.range(of: "}") {
-                    return String(hostnamePart[..<endRange.lowerBound])
+                    let hostname = String(hostnamePart[..<endRange.lowerBound])
+                    os_log("Extracted hostname from description (method 2): %{public}@", log: logger, type: .debug, hostname)
+                    return hostname
                 }
             }
 
@@ -185,12 +236,14 @@ class FilterProvider: NEFilterDataProvider {
                     let hostname = String(endpointPart[..<colonRange.lowerBound])
                     // Filter out IP addresses and empty strings
                     if !hostname.isEmpty && !hostname.contains("[") && !isIPAddress(hostname) {
+                        os_log("Extracted hostname from remoteEndpoint: %{public}@", log: logger, type: .debug, hostname)
                         return hostname
                     }
                 }
             }
         }
 
+        os_log("Could not extract hostname from flow", log: logger, type: .debug)
         return ""
     }
 

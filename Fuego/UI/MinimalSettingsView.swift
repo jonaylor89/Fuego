@@ -486,60 +486,60 @@ struct MinimalSettingsView: View {
     }
 
     private func debugNetworkExtensionSetup() async {
-        print("🔧 DEBUG: Starting Network Extension setup debug...")
+        print("DEBUG: Starting Network Extension setup debug...")
 
         do {
             // Direct access to the network extension manager
             let manager = NEFilterManager.shared()
-            print("🔧 DEBUG: Got NEFilterManager instance")
+            print("DEBUG: Got NEFilterManager instance")
 
             // Load preferences first
             try await manager.loadFromPreferences()
-            print("🔧 DEBUG: Loaded preferences")
-            print("🔧 DEBUG: Current isEnabled: \(manager.isEnabled)")
-            print("🔧 DEBUG: Has configuration: \(manager.providerConfiguration != nil)")
+            print("DEBUG: Loaded preferences")
+            print("DEBUG: Current isEnabled: \(manager.isEnabled)")
+            print("DEBUG: Has configuration: \(manager.providerConfiguration != nil)")
 
             if let config = manager.providerConfiguration {
-                print("🔧 DEBUG: Existing config: \(config)")
+                print("DEBUG: Existing config: \(config)")
             }
 
             // Create a new configuration manually
-            print("🔧 DEBUG: Creating new NEFilterProviderConfiguration...")
+            print("DEBUG: Creating new NEFilterProviderConfiguration...")
             let configuration = NEFilterProviderConfiguration()
             configuration.username = "Fuego User"
             configuration.organization = "Fuego Focus App"
             configuration.filterSockets = true
             configuration.filterPackets = false
             configuration.vendorConfiguration = [:]
-            print("🔧 DEBUG: Configuration created")
+            print("DEBUG: Configuration created")
 
             manager.providerConfiguration = configuration
             manager.localizedDescription = "Fuego Content Filter"
             manager.isEnabled = true
 
-            print("🔧 DEBUG: Configuration assigned to manager")
-            print("🔧 DEBUG: Manager isEnabled: \(manager.isEnabled)")
-            print("🔧 DEBUG: Manager description: \(manager.localizedDescription ?? "nil")")
+            print("DEBUG: Configuration assigned to manager")
+            print("DEBUG: Manager isEnabled: \(manager.isEnabled)")
+            print("DEBUG: Manager description: \(manager.localizedDescription ?? "nil")")
 
             // Try to save to preferences
-            print("🔧 DEBUG: Attempting to save to preferences...")
+            print("DEBUG: Attempting to save to preferences...")
             try await manager.saveToPreferences()
-            print("🔧 DEBUG: ✅ saveToPreferences() succeeded!")
+            print("DEBUG: saveToPreferences() succeeded!")
 
             // Wait and reload to check if it persisted
             try await Task.sleep(nanoseconds: 2_000_000_000)
-            print("🔧 DEBUG: Reloading preferences after save...")
+            print("DEBUG: Reloading preferences after save...")
             try await manager.loadFromPreferences()
 
-            print("🔧 DEBUG: After save - isEnabled: \(manager.isEnabled)")
-            print("🔧 DEBUG: After save - has config: \(manager.providerConfiguration != nil)")
-            print("🔧 DEBUG: After save - description: \(manager.localizedDescription ?? "nil")")
+            print("DEBUG: After save - isEnabled: \(manager.isEnabled)")
+            print("DEBUG: After save - has config: \(manager.providerConfiguration != nil)")
+            print("DEBUG: After save - description: \(manager.localizedDescription ?? "nil")")
 
             DispatchQueue.main.async {
                 let alert = NSAlert()
                 alert.messageText = "Debug Setup Complete"
                 alert.informativeText = """
-                    ✅ NEFilterManager.saveToPreferences() succeeded!
+                    NEFilterManager.saveToPreferences() succeeded!
 
                     Extension enabled: \(manager.isEnabled)
                     Has config: \(manager.providerConfiguration != nil)
@@ -552,22 +552,22 @@ struct MinimalSettingsView: View {
             }
 
         } catch {
-            print("🔧 DEBUG: ❌ Setup failed with error: \(error)")
-            print("🔧 DEBUG: Error type: \(type(of: error))")
-            print("🔧 DEBUG: Error domain: \((error as NSError).domain)")
-            print("🔧 DEBUG: Error code: \((error as NSError).code)")
-            print("🔧 DEBUG: Error userInfo: \((error as NSError).userInfo)")
+            print("DEBUG: Setup failed with error: \(error)")
+            print("DEBUG: Error type: \(type(of: error))")
+            print("DEBUG: Error domain: \((error as NSError).domain)")
+            print("DEBUG: Error code: \((error as NSError).code)")
+            print("DEBUG: Error userInfo: \((error as NSError).userInfo)")
 
             if let neError = error as? NEVPNError {
-                print("🔧 DEBUG: NEVPNError code: \((neError as NSError).code)")
-                print("🔧 DEBUG: NEVPNError description: \(neError.localizedDescription)")
+                print("DEBUG: NEVPNError code: \((neError as NSError).code)")
+                print("DEBUG: NEVPNError description: \(neError.localizedDescription)")
             }
 
             DispatchQueue.main.async {
                 let alert = NSAlert()
                 alert.messageText = "Debug Setup Failed"
                 alert.informativeText = """
-                    ❌ NEFilterManager.saveToPreferences() failed!
+                    NEFilterManager.saveToPreferences() failed!
 
                     Error: \(error.localizedDescription)
                     Domain: \((error as NSError).domain)

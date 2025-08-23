@@ -54,6 +54,24 @@ class SharedBlocklist {
         blockedDomains = domains
         isFilteringEnabled = enabled
         logger.info("Updated blocklist with \(domains.count) domains, enabled: \(enabled)")
+
+        // Notify extension via Darwin notification
+        notifyExtensionOfUpdate()
+    }
+
+    private func notifyExtensionOfUpdate() {
+        let notificationName = "dev.getfuego.blocklist.updated" as CFString
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+
+        CFNotificationCenterPostNotification(
+            center,
+            CFNotificationName(notificationName),
+            nil,
+            nil,
+            true
+        )
+
+        logger.info("Sent Darwin notification to extension")
     }
 }
 
@@ -101,8 +119,8 @@ class NetworkExtensionBlockingEngine: ObservableObject {
                 try await networkExtensionManager.setupNetworkExtension()
             }
 
-            // Update the blocklist in shared storage
-            networkExtensionManager.updateBlocklist(blockedWebsites)
+            // Update the blocklist in shared storage and enable filtering
+            networkExtensionManager.updateBlocklist(blockedWebsites, enableFiltering: true)
             currentBlockedWebsites = blockedWebsites
 
             // Apply app blocking (still using traditional method)
@@ -125,8 +143,8 @@ class NetworkExtensionBlockingEngine: ObservableObject {
         logger.info("Disabling Network Extension blocking")
 
         do {
-            // Disable the Network Extension
-            try await networkExtensionManager.disableExtension()
+            // Disable filtering by clearing blocklist and setting enabled to false
+            networkExtensionManager.updateBlocklist([], enableFiltering: false)
 
             // Disable app blocking
             await appBlockingManager.disableBlocking()

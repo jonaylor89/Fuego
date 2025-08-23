@@ -31,7 +31,7 @@ struct MinimalDashboardView: View {
                 if let session = core.currentSession {
                     // Active session state
                     VStack(spacing: 16) {
-                        Text(formatDuration(session.duration))
+                        Text(formatDuration(core.timerState.remainingTime))
                             .font(.system(.largeTitle, design: .monospaced))
                             .fontWeight(.ultraLight)
                             .foregroundColor(.primary)

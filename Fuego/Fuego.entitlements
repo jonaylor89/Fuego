@@ -6,17 +6,11 @@
 	<array>
 		<string>content-filter-provider</string>
 	</array>
-	<key>com.apple.security.app-sandbox</key>
+	<key>com.apple.developer.system-extension.install</key>
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.dev.getfuego.FuegoFocus</string>
+		<string>$(TeamIdentifierPrefix)dev.getfuego.FuegoFocus</string>
 	</array>
-	<key>com.apple.security.automation.apple-events</key>
-	<true/>
-	<key>com.apple.security.network.client</key>
-	<true/>
-	<key>com.apple.developer.system-extension.install</key>
-	<true/>
 </dict>
 </plist>

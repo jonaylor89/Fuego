@@ -1,10 +1,10 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 @main
 struct FuegoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
+
     var body: some Scene {
         Settings {
             EmptyView()
@@ -12,82 +12,54 @@ struct FuegoApp: App {
     }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
-    private var popover: NSPopover?
-    private var fuegoCore: FuegoCore?
-    
+    private let popover = NSPopover()
+    private var core: FuegoCore?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        setupMenuBar()
-        setupCore()
-        
-        // Hide dock icon for menu bar only app
         NSApp.setActivationPolicy(.accessory)
-    }
-    
-    private func setupMenuBar() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        
-        if let button = statusItem?.button {
+
+        // Unit tests use this app as their host; they build their own FuegoCore with fakes.
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+
+        let core = FuegoCore(blockingEngine: BlockingEngine(filter: ContentFilterController()))
+        self.core = core
+
+        popover.contentSize = NSSize(width: 280, height: 360)
+        popover.behavior = .transient
+        popover.contentViewController = NSHostingController(
+            rootView: DashboardView().environmentObject(core))
+
+        let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "flame.fill", accessibilityDescription: "Fuego")
             button.action = #selector(togglePopover(_:))
             button.target = self
+            button.setAccessibilityIdentifier("fuego.statusItem")
         }
-        
-        setupPopover()
+        self.statusItem = statusItem
+
+        Task { await core.refreshFilterStatus() }
     }
-    
-    private func setupPopover() {
-        popover = NSPopover()
-        popover?.contentSize = NSSize(width: 280, height: 360)
-        popover?.behavior = .transient
-        
-        // Create the core first if needed
-        if fuegoCore == nil {
-            Task { @MainActor in
-                fuegoCore = FuegoCore()
-                await setupPopoverContent()
-            }
-        } else {
-            Task { @MainActor in
-                await setupPopoverContent()
-            }
-        }
-    }
-    
-    @MainActor
-    private func setupPopoverContent() async {
-        popover?.contentViewController = NSHostingController(
-            rootView: DashboardView()
-                .environmentObject(fuegoCore!)
-        )
-    }
-    
-    @MainActor
-    private func setupCore() {
-        fuegoCore = FuegoCore()
-        
-        // Run persistence test for debugging
-        #if DEBUG
-        // Test removed for simplicity
-        #endif
-    }
-    
+
     @objc private func togglePopover(_ sender: AnyObject?) {
-        if let button = statusItem?.button {
-            if popover?.isShown == true {
-                popover?.performClose(sender)
-            } else {
-                popover?.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
-                popover?.contentViewController?.view.window?.makeKey()
-            }
+        guard let button = statusItem?.button else { return }
+        if popover.isShown {
+            popover.performClose(sender)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
         }
     }
-    
-    func applicationWillTerminate(_ notification: Notification) {
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let core else { return .terminateNow }
         Task {
-            await fuegoCore?.blockingEngine.cleanup()
-            fuegoCore?.shutdown()
+            await core.shutdown()
+            sender.reply(toApplicationShouldTerminate: true)
         }
+        return .terminateLater
     }
 }

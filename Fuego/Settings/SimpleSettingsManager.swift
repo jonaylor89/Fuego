@@ -1,37 +1,33 @@
 import Combine
 import Foundation
 import Logging
+import ServiceManagement
 
-/// Simplified settings manager for basic functionality
+/// Persists `FuegoSettings` and applies the launch-at-login preference.
 @MainActor
-class SettingsManager: ObservableObject {
+final class SettingsManager: ObservableObject {
     private let logger = Logger(label: "dev.getfuego.settings")
-    private let persistence: PersistenceManager
-    private let userDefaults = UserDefaults.standard
+    private let userDefaults: UserDefaults
+    private let applyLaunchAtLogin: (Bool) -> Void
     private let settingsKey = "FuegoSettings"
 
-    @Published var settings: FuegoSettings
+    @Published private(set) var settings = FuegoSettings()
 
-    init() {
-        self.persistence = PersistenceManager()
-        self.settings = FuegoSettings()  // Initialize with defaults first
-        self.settings = loadSettings()  // Then load actual settings
-
-        logger.info("Settings manager initialized")
+    init(
+        userDefaults: UserDefaults = .standard,
+        applyLaunchAtLogin: @escaping (Bool) -> Void = SettingsManager.setLaunchAtLogin
+    ) {
+        self.userDefaults = userDefaults
+        self.applyLaunchAtLogin = applyLaunchAtLogin
+        self.settings = loadSettings()
     }
-
-    // MARK: - Settings Management
 
     func loadSettings() -> FuegoSettings {
         guard let data = userDefaults.data(forKey: settingsKey) else {
-            logger.info("No saved settings found, using defaults")
             return FuegoSettings()
         }
-
         do {
-            let savedSettings = try JSONDecoder().decode(FuegoSettings.self, from: data)
-            logger.info("Settings loaded successfully")
-            return savedSettings
+            return try JSONDecoder().decode(FuegoSettings.self, from: data)
         } catch {
             logger.error("Failed to decode settings: \(error)")
             return FuegoSettings()
@@ -39,24 +35,24 @@ class SettingsManager: ObservableObject {
     }
 
     func saveSettings(_ newSettings: FuegoSettings) throws {
-        do {
-            let data = try JSONEncoder().encode(newSettings)
-            userDefaults.set(data, forKey: settingsKey)
-            settings = newSettings
-            logger.info("Settings saved successfully")
-        } catch {
-            logger.error("Failed to save settings: \(error)")
-            throw error
+        let data = try JSONEncoder().encode(newSettings)
+        userDefaults.set(data, forKey: settingsKey)
+        if newSettings.launchAtLogin != settings.launchAtLogin {
+            applyLaunchAtLogin(newSettings.launchAtLogin)
         }
+        settings = newSettings
     }
 
-    func resetToDefaults() {
-        let defaultSettings = FuegoSettings()
+    nonisolated static func setLaunchAtLogin(_ enabled: Bool) {
         do {
-            try saveSettings(defaultSettings)
-            logger.info("Settings reset to defaults")
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
         } catch {
-            logger.error("Failed to reset settings: \(error)")
+            Logger(label: "dev.getfuego.settings").error(
+                "Failed to update launch at login: \(error.localizedDescription)")
         }
     }
 }

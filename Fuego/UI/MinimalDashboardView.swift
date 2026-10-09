@@ -28,7 +28,7 @@ struct MinimalDashboardView: View {
             
             // Central focus area
             VStack(spacing: 32) {
-                if let session = core.currentSession {
+                if core.currentSession != nil {
                     // Active session state
                     VStack(spacing: 16) {
                         Text(formatDuration(core.timerState.remainingTime))
@@ -85,7 +85,16 @@ struct MinimalDashboardView: View {
             }
             
             Spacer()
-            
+
+            if let error = core.lastError {
+                Text(error)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundColor(.orange)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .accessibilityIdentifier("dashboard.error")
+            }
+
             // Minimal footer
             HStack {
                 Button("settings") {
@@ -117,5 +126,5 @@ struct MinimalDashboardView: View {
 
 #Preview {
     MinimalDashboardView()
-        .environmentObject(FuegoCore())
+        .environmentObject(FuegoCore(blockingEngine: BlockingEngine(filter: ContentFilterController())))
 }

@@ -4,151 +4,119 @@ import Logging
 
 /// Central coordination hub for all Fuego functionality
 @MainActor
-class FuegoCore: ObservableObject {
-    static let shared = FuegoCore()
-
+final class FuegoCore: ObservableObject {
     private let logger = Logger(label: "dev.getfuego.core")
 
-    // Core managers
     let sessionManager: SessionManager
-    let blockingEngine: NetworkExtensionBlockingEngine
+    let blockingEngine: BlockingEngine
     let timerEngine: TimerEngine
     let settingsManager: SettingsManager
-    let persistenceManager: PersistenceManager
 
-    // Published state
-    @Published var currentSession: Session?
-    @Published var isBlocked: Bool = false
-    @Published var timerState: TimerState = .idle
-    @Published var settings: FuegoSettings = FuegoSettings()
-    @Published var networkExtensionStatus: String = "Unknown"
+    @Published private(set) var currentSession: Session?
+    @Published private(set) var isBlocked = false
+    @Published private(set) var timerState: TimerState = .idle
+    @Published private(set) var settings: FuegoSettings
+    @Published private(set) var filterStatus: FilterStatus = .unknown
+    @Published var lastError: String?
 
-    private var cancellables = Set<AnyCancellable>()
+    init(
+        blockingEngine: BlockingEngine,
+        settingsManager: SettingsManager? = nil,
+        timerEngine: TimerEngine? = nil
+    ) {
+        let settingsManager = settingsManager ?? SettingsManager()
+        self.blockingEngine = blockingEngine
+        self.settingsManager = settingsManager
+        self.timerEngine = timerEngine ?? TimerEngine()
+        self.sessionManager = SessionManager(persistence: PersistenceManager())
+        self.settings = settingsManager.settings
 
-    init() {
-        // Initialize managers
-        self.persistenceManager = PersistenceManager()
-        self.settingsManager = SettingsManager()
-        self.blockingEngine = NetworkExtensionBlockingEngine()
-        self.timerEngine = TimerEngine()
-        self.sessionManager = SessionManager(persistence: persistenceManager)
+        sessionManager.$currentSession.assign(to: &$currentSession)
+        blockingEngine.$isActive.assign(to: &$isBlocked)
+        self.timerEngine.$state.assign(to: &$timerState)
+        blockingEngine.filter.statusPublisher.assign(to: &$filterStatus)
 
-        // Load settings
-        loadSettings()
+        self.timerEngine.onTimerComplete = { [weak self] in
+            Task { try? await self?.endSession() }
+        }
 
-        setupBindings()
         logger.info("Fuego Core initialized")
-    }
-
-    private func setupBindings() {
-        // Session state changes
-        sessionManager.$currentSession
-            .assign(to: &$currentSession)
-
-        // Blocking state changes
-        blockingEngine.$isActive
-            .assign(to: &$isBlocked)
-
-        // Timer state changes
-        timerEngine.$state
-            .assign(to: &$timerState)
-
-        // Network extension status changes
-        blockingEngine.$extensionStatus
-            .assign(to: &$networkExtensionStatus)
-    }
-
-    private func loadSettings() {
-        settings = settingsManager.loadSettings()
     }
 
     // MARK: - Session Control
 
     func startSession() async throws {
         logger.info("Starting focus session")
-
-        // Start session
+        lastError = nil
         _ = try await sessionManager.startSession()
+        timerEngine.start(duration: settings.timerDuration)
 
-        // Apply blocking rules from settings
-        try await blockingEngine.applyRules(settings.blockedWebsites, settings.blockedApplications)
-
-        // Start timer
-        try await timerEngine.start(duration: settings.timerDuration)
+        do {
+            try await blockingEngine.apply(
+                websites: settings.blockedWebsites, apps: settings.blockedApplications)
+        } catch {
+            lastError = "website blocking unavailable: \(error.localizedDescription)"
+            throw error
+        }
     }
 
     func pauseSession() async throws {
         guard currentSession != nil else { return }
-
         logger.info("Pausing session")
         try await sessionManager.pauseSession()
-        await blockingEngine.disable()
         timerEngine.pause()
+        await blockingEngine.disable()
     }
 
     func resumeSession() async throws {
         guard currentSession != nil else { return }
-
         logger.info("Resuming session")
         try await sessionManager.resumeSession()
-        try await blockingEngine.applyRules(settings.blockedWebsites, settings.blockedApplications)
         timerEngine.resume()
+        try await blockingEngine.apply(
+            websites: settings.blockedWebsites, apps: settings.blockedApplications)
     }
 
     func endSession() async throws {
         guard currentSession != nil else { return }
-
         logger.info("Ending session")
         try await sessionManager.endSession()
-        await blockingEngine.disable()
         timerEngine.stop()
-    }
-
-    // MARK: - Quick Actions
-
-    func toggleSession() async throws {
-        if currentSession != nil {
-            if sessionManager.isPaused {
-                try await resumeSession()
-            } else {
-                try await pauseSession()
-            }
-        } else {
-            try await startSession()
-        }
+        await blockingEngine.disable()
     }
 
     // MARK: - Settings Management
 
     func updateSettings(_ newSettings: FuegoSettings) async throws {
-        settings = newSettings
         try settingsManager.saveSettings(newSettings)
+        settings = newSettings
 
-        // If session is active, update blocking rules
         if currentSession != nil, !sessionManager.isPaused {
-            try await blockingEngine.applyRules(
-                settings.blockedWebsites, settings.blockedApplications)
+            try await blockingEngine.apply(
+                websites: settings.blockedWebsites, apps: settings.blockedApplications)
         }
     }
 
-    // MARK: - Network Extension Management
+    // MARK: - Website Blocking Setup
 
-    func requestNetworkExtensionSetup() async throws {
-        try await blockingEngine.requestInitialSetup()
+    func installContentFilter() async {
+        do {
+            try await blockingEngine.filter.install()
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    func refreshFilterStatus() async {
+        await blockingEngine.filter.refreshStatus()
     }
 
     // MARK: - Lifecycle
 
-    func shutdown() {
+    func shutdown() async {
         logger.info("Shutting down Fuego Core")
-
-        Task {
-            if currentSession != nil {
-                try? await endSession()
-            }
-            await blockingEngine.cleanup()
-        }
-
-        cancellables.removeAll()
+        try? await endSession()
+        await blockingEngine.disable()
     }
 }

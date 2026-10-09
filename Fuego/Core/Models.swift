@@ -40,17 +40,6 @@ struct Session: Identifiable, Codable {
     }
 }
 
-/// Simple blocking configuration
-struct BlockingConfiguration: Codable {
-    var blockedWebsites: Set<String> = []
-    var blockedApplications: Set<String> = []
-    var timerDuration: TimeInterval = 25 * 60 // 25 minutes default
-    
-    init() {}
-}
-
-
-
 // MARK: - Timer State
 
 indirect enum TimerState: Equatable {
@@ -90,8 +79,8 @@ indirect enum TimerState: Equatable {
 
 // MARK: - Settings
 
-struct FuegoSettings: Codable {
-    var launchAtLogin: Bool = true
+struct FuegoSettings: Codable, Equatable {
+    var launchAtLogin: Bool = false
     var blockedWebsites: Set<String> = []
     var blockedApplications: Set<String> = []
     var timerDuration: TimeInterval = 25 * 60 // 25 minutes

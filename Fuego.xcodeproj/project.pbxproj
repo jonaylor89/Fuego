@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8F72C57F2E55760600E6ADF5 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F72C57E2E55760600E6ADF5 /* NetworkExtension.framework */; };
-		8F72C5872E55760600E6ADF5 /* FuegoContentFilter.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8F72C5872E55760600E6ADF5 /* FuegoContentFilter.systemextension in Embed System Extensions */ = {isa = PBXBuildFile; fileRef = 8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.systemextension */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8F72C5C72E55844C00E6ADF5 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F72C5C62E55844C00E6ADF5 /* Logging */; };
 		8F72C5C92E55845500E6ADF5 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F72C5C82E55845500E6ADF5 /* Logging */; };
 /* End PBXBuildFile section */
@@ -38,15 +38,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		8F72C58C2E55760600E6ADF5 /* Embed Foundation Extensions */ = {
+		8F72C58C2E55760600E6ADF5 /* Embed System Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
+			dstPath = "$(SYSTEM_EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
 			files = (
-				8F72C5872E55760600E6ADF5 /* FuegoContentFilter.appex in Embed Foundation Extensions */,
+				8F72C5872E55760600E6ADF5 /* FuegoContentFilter.systemextension in Embed System Extensions */,
 			);
-			name = "Embed Foundation Extensions";
+			name = "Embed System Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -55,9 +55,19 @@
 		8F72C54D2E55757D00E6ADF5 /* Fuego.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fuego.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F72C55B2E55757E00E6ADF5 /* FuegoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FuegoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F72C5652E55757E00E6ADF5 /* FuegoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FuegoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FuegoContentFilter.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.systemextension */ = {isa = PBXFileReference; explicitFileType = "wrapper.system-extension"; includeInIndex = 0; path = dev.getfuego.FuegoFocus.FuegoContentFilter.systemextension; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F72C57E2E55760600E6ADF5 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8F72C5D12E55900000E6ADF5 /* Exceptions for "FuegoContentFilter" folder in "FuegoContentFilter" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8F72C57B2E55760600E6ADF5 /* FuegoContentFilter */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8F72C54F2E55757D00E6ADF5 /* Fuego */ = {
@@ -77,7 +87,15 @@
 		};
 		8F72C5802E55760600E6ADF5 /* FuegoContentFilter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8F72C5D12E55900000E6ADF5 /* Exceptions for "FuegoContentFilter" folder in "FuegoContentFilter" target */,
+			);
 			path = FuegoContentFilter;
+			sourceTree = "<group>";
+		};
+		8F72C5D02E55900000E6ADF5 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -124,6 +142,7 @@
 				8F72C55E2E55757E00E6ADF5 /* FuegoTests */,
 				8F72C5682E55757E00E6ADF5 /* FuegoUITests */,
 				8F72C5802E55760600E6ADF5 /* FuegoContentFilter */,
+				8F72C5D02E55900000E6ADF5 /* Shared */,
 				8F72C57D2E55760600E6ADF5 /* Frameworks */,
 				8F72C54E2E55757D00E6ADF5 /* Products */,
 			);
@@ -135,7 +154,7 @@
 				8F72C54D2E55757D00E6ADF5 /* Fuego.app */,
 				8F72C55B2E55757E00E6ADF5 /* FuegoTests.xctest */,
 				8F72C5652E55757E00E6ADF5 /* FuegoUITests.xctest */,
-				8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */,
+				8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.systemextension */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -158,7 +177,7 @@
 				8F72C5492E55757D00E6ADF5 /* Sources */,
 				8F72C54A2E55757D00E6ADF5 /* Frameworks */,
 				8F72C54B2E55757D00E6ADF5 /* Resources */,
-				8F72C58C2E55760600E6ADF5 /* Embed Foundation Extensions */,
+				8F72C58C2E55760600E6ADF5 /* Embed System Extensions */,
 			);
 			buildRules = (
 			);
@@ -167,6 +186,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				8F72C54F2E55757D00E6ADF5 /* Fuego */,
+				8F72C5D02E55900000E6ADF5 /* Shared */,
 			);
 			name = Fuego;
 			packageProductDependencies = (
@@ -236,14 +256,15 @@
 			);
 			fileSystemSynchronizedGroups = (
 				8F72C5802E55760600E6ADF5 /* FuegoContentFilter */,
+				8F72C5D02E55900000E6ADF5 /* Shared */,
 			);
 			name = FuegoContentFilter;
 			packageProductDependencies = (
 				8F72C5C82E55845500E6ADF5 /* Logging */,
 			);
 			productName = FuegoContentFilter;
-			productReference = 8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.appex */;
-			productType = "com.apple.product-type.app-extension";
+			productReference = 8F72C57C2E55760600E6ADF5 /* FuegoContentFilter.systemextension */;
+			productType = "com.apple.product-type.system-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -513,12 +534,13 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Fuego;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Johannes Naylor";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -543,12 +565,13 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Fuego;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Johannes Naylor";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -566,7 +589,7 @@
 				DEVELOPMENT_TEAM = 9HNXYM86C6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -584,7 +607,7 @@
 				DEVELOPMENT_TEAM = 9HNXYM86C6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -600,7 +623,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9HNXYM86C6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -616,7 +639,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9HNXYM86C6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -642,9 +665,10 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus.FuegoContentFilter;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = FuegoContentFilter;
+				PRODUCT_NAME = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -669,9 +693,10 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.getfuego.FuegoFocus.FuegoContentFilter;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = FuegoContentFilter;
+				PRODUCT_NAME = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -734,8 +759,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-log.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.6.4;
+				kind = exactVersion;
+				version = 1.6.4;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

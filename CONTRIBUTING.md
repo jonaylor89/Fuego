@@ -1,163 +1,83 @@
 # Contributing to Fuego
 
-Thank you for your interest in contributing to Fuego! This document provides guidelines for contributing to the project.
+## Requirements
 
-## Getting Started
+- macOS 15.5 or later
+- Xcode 26 or later
+- For website blocking: an Apple Developer team with the **Network Extensions** (content filter) and **System Extension** capabilities
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/yourusername/fuego.git
-   cd fuego
-   ```
-3. **Open the project** in Xcode:
-   ```bash
-   open Fuego.xcodeproj
-   ```
+## Project layout
 
-## Development Setup
-
-### Requirements
-- macOS 12.0 or later
-- Xcode 14.0 or later
-- Apple Developer account (for Network Extension testing)
-
-### Building
-1. Open `Fuego.xcodeproj` in Xcode
-2. Select your development team in project settings
-3. Build and run the project (⌘+R)
-
-### Network Extension Development
-- Network Extensions require proper entitlements and code signing
-- You'll need to update the team ID in both entitlement files
-- Test on a real device, not just the simulator
-
-## Code Style
-
-### Swift
-- Use Swift 5.5+ features when appropriate
-- Follow standard Swift naming conventions
-- Use `// MARK: -` comments to organize code sections
-- Keep functions focused and single-purpose
-
-### Structure
-- Keep UI components in `Sources/Fuego/UI/`
-- Keep core logic in `Sources/Fuego/Core/`
-- Keep Network Extension code in `Sources/FuegoContentFilter/`
-- Use meaningful file and folder names
-
-### Comments
-- Write clear, concise comments for complex logic
-- Document public APIs with Swift documentation comments
-- Avoid obvious comments that just restate the code
-
-## Pull Request Process
-
-### Before Submitting
-1. **Test your changes** thoroughly
-2. **Run the app** and verify core functionality works
-3. **Test Network Extension** setup and blocking
-4. **Check for console errors** or warnings
-5. **Update documentation** if needed
-
-### Pull Request Guidelines
-1. **Create a focused PR** - one feature or fix per PR
-2. **Write a clear title** describing the change
-3. **Describe the changes** in the PR description:
-   - What does this change?
-   - Why is it needed?
-   - How to test it?
-4. **Link related issues** using "Fixes #123" or "Addresses #123"
-
-### PR Description Template
-```markdown
-## What Changed
-Brief description of the changes made.
-
-## Why
-Explain the motivation for this change.
-
-## How to Test
-1. Step one
-2. Step two
-3. Expected result
-
-## Screenshots/Videos
-If applicable, add screenshots or videos demonstrating the change.
-
-## Checklist
-- [ ] Tested on macOS 12+
-- [ ] No console errors/warnings
-- [ ] Network Extension functionality works
-- [ ] Documentation updated if needed
+```
+Fuego/                    Menu bar app
+  FuegoApp.swift          App delegate, status item, popover
+  Core/                   FuegoCore (coordinator), SessionManager, models, persistence
+  BlockingEngine/         BlockingEngine + AppBlocker, ContentFilterController (system extension + NEFilterManager)
+  Timer/                  TimerEngine
+  Settings/               SettingsManager (UserDefaults, launch at login)
+  UI/                     SwiftUI views
+FuegoContentFilter/       Network Extension content filter, built as a system extension
+  main.swift              NEProvider.startSystemExtensionMode()
+  FilterProvider.swift    NEFilterDataProvider that drops blocked hosts
+Shared/                   Code compiled into both targets (DomainMatcher, FilterVendorConfiguration)
+FuegoTests/               Swift Testing integration tests
+FuegoUITests/             UI launch tests
+website/                  getfuego.dev
 ```
 
-## Issue Reporting
+## How website blocking is wired
 
-### Bug Reports
-Use the bug report template and include:
-- macOS version
-- Fuego version
-- Steps to reproduce
-- Expected vs actual behavior
-- Console logs if relevant
+1. `ContentFilterController.install()` submits an `OSSystemExtensionRequest` for `dev.getfuego.FuegoFocus.FuegoContentFilter`, then saves an `NEFilterManager` configuration pointing at it (disabled).
+2. When a session starts, `startFiltering(blockedDomains:)` writes the blocklist into `NEFilterProviderConfiguration.vendorConfiguration` and enables the filter. The extension runs as root, so it can't read the user's defaults — the provider configuration is how the blocklist reaches it.
+3. `FilterProvider` reloads the blocklist whenever `filterConfiguration` changes and drops flows whose host matches `DomainMatcher.isBlocked`.
+4. When the session pauses or ends (including the timer reaching zero), the filter is disabled.
 
-### Feature Requests
-Use the feature request template and include:
-- Clear description of the feature
-- Use case or motivation
-- Possible implementation ideas
+The system extension's bundle name must equal its bundle ID, which is why the product is `dev.getfuego.FuegoFocus.FuegoContentFilter.systemextension`.
 
-## Types of Contributions
+The app itself is **not** sandboxed: a sandboxed app can't quit other apps (`NSRunningApplication.terminate()` returns `false`), which breaks app blocking. The system extension is sandboxed.
 
-### Welcome Contributions
-- **Bug fixes** - Always appreciated!
-- **UI/UX improvements** - Keep it minimal and focused
-- **Performance optimizations** - Especially for Network Extension
-- **Documentation improvements** - Help others understand the code
-- **Test coverage** - Help ensure reliability
+## Building and running
 
-### Discuss First
-- **Major new features** - Create an issue to discuss approach
-- **Breaking changes** - Need community input
-- **Architecture changes** - Should align with project goals
+```bash
+xcodebuild -project Fuego.xcodeproj -scheme Fuego build CODE_SIGNING_ALLOWED=NO
+```
 
-## Development Notes
+An unsigned build is enough to work on the UI, the timer, and app blocking. To exercise website blocking:
 
-### Network Extension Limitations
-- Network Extensions run in a sandboxed environment
-- Limited API access compared to main app
-- Debugging can be challenging - use logging liberally
-- Changes require app restart to take effect
+1. Set your team in **Signing & Capabilities** for both the `Fuego` and `FuegoContentFilter` targets. Both need the Network Extensions (Content Filter) capability and the same App Group; `Fuego` also needs System Extension.
+2. Build, copy `Fuego.app` to `/Applications`, and run it from there.
+3. While developing you can skip notarization with `systemextensionsctl developer on` (requires SIP to be disabled). Use `systemextensionsctl list` to inspect installed extensions and `systemextensionsctl reset` to remove them.
 
-### Debugging Tips
-- Use `Logger` for consistent logging across the app
-- Check Console.app for Network Extension logs
-- Test with System Preferences → Privacy & Security → Extensions
+## Tests
 
-### Testing
-- Test on both Intel and Apple Silicon Macs if possible
-- Test Network Extension permissions flow thoroughly
-- Verify app works correctly after macOS restarts
-- Test with various websites and blocking scenarios
+```bash
+xcodebuild test -project Fuego.xcodeproj -scheme Fuego -only-testing:FuegoTests \
+  CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= CODE_SIGN_ENTITLEMENTS=
+```
 
-## Code of Conduct
+The overrides ad-hoc sign the test host without restricted entitlements, so tests run without a developer team. They cover:
 
-- **Be respectful** and constructive in discussions
-- **Help others** learn and contribute
-- **Focus on the code**, not personal preferences
-- **Keep discussions relevant** to the project
+- domain normalization/matching and the vendor-configuration round trip used by the filter
+- the session lifecycle (start, pause, resume, end, timer completion) against a fake content filter
+- settings persistence
+- app blocking against a real app (launches and quits TextEdit — don't have unsaved TextEdit documents open)
 
-## Questions?
+The real content filter can't be tested in CI; check it manually with a signed build (see the release checklist).
 
-- **General questions**: Start a [Discussion](https://github.com/yourusername/fuego/discussions)
-- **Bug reports**: Open an [Issue](https://github.com/yourusername/fuego/issues)
-- **Feature requests**: Open an [Issue](https://github.com/yourusername/fuego/issues) with the feature template
+## Dependencies
 
-## License
+Pin every dependency to an exact version (no ranges). The only package is `swift-log`, pinned in `Fuego.xcodeproj` and `Package.resolved`.
 
-By contributing to Fuego, you agree that your contributions will be licensed under the same license as the project.
+## Releasing
 
----
+1. Bump `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` for all targets.
+2. Archive the `Fuego` scheme and export with **Developer ID**. Developer ID builds need the `-systemextension` variants of the Network Extension entitlement (`content-filter-provider-systemextension`); confirm with `codesign -d --entitlements - Fuego.app/Contents/Library/SystemExtensions/*.systemextension` after export.
+3. Notarize and staple (`xcrun notarytool submit … --wait`, `xcrun stapler staple Fuego.app`).
+4. On a clean Mac: install to `/Applications`, approve the extension and filter, start a session with a blocked site and app, confirm both are blocked, wait for the timer to finish, confirm both are unblocked.
+5. Publish a GitHub release with the zipped or DMG'd app.
 
-Thank you for contributing to Fuego! 🔥
+## Pull requests
+
+- Keep changes focused and run the tests above.
+- Update the docs (README, SETUP_INSTRUCTIONS) when behavior changes.
+- Report bugs and ideas in [GitHub Issues](https://github.com/jonaylor89/Fuego/issues).

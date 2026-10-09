@@ -1,224 +1,60 @@
-# 🔥 Fuego Setup Instructions
+# Fuego Setup
 
-Complete setup guide for getting Fuego working on your Mac.
+## Requirements
 
-## System Requirements
+- macOS 15.5 or later
+- Fuego.app in `/Applications` (macOS refuses to activate system extensions from anywhere else)
 
-- **macOS**: 12.0 (Monterey) or later
-- **Hardware**: Intel Mac or Apple Silicon Mac
-- **Disk Space**: ~10MB
-- **Network**: Required for initial setup and Network Extension registration
+## First run
 
-## Installation
+1. Open Fuego. A flame appears in the menu bar; there's no Dock icon.
+2. Click the flame → gear → add websites and/or apps → back.
+3. Click **begin**.
 
-### Option 1: Download DMG (Recommended)
-1. Download `Fuego.dmg` from the [latest release](https://github.com/jonaylor89/fuego/releases)
-2. Open the DMG file
-3. Drag Fuego.app to your Applications folder
-4. Eject the DMG
+If you've added websites, Fuego installs its content filter the first time a session starts (you can also do this ahead of time with **set up** under *website blocking* in settings). macOS then asks for two approvals:
 
-### Option 2: Homebrew
-```bash
-brew install --cask fuego
-```
+1. **System extension** — macOS shows "System Extension Blocked". Open **System Settings → General → Login Items & Extensions**, scroll to **Network Extensions**, and turn on **Fuego**.
+2. **Content filter** — macOS asks whether Fuego may "filter network content". Click **Allow**.
 
-### Option 3: Build from Source
-```bash
-git clone https://github.com/jonaylor89/fuego.git
-cd fuego
-open Fuego.xcodeproj
-# Build and run in Xcode
-```
+Once approved, the settings screen shows website blocking as **ready** (between sessions) or **blocking** (during a session). You don't need to approve again unless you uninstall Fuego.
 
-## Initial Setup
+App blocking needs no approval.
 
-### Step 1: Launch Fuego
-1. Open Fuego from Applications or Spotlight
-2. Look for the 🔥 icon in your menu bar (top-right corner)
-3. Click the icon to open the widget
+## How blocking works
 
-### Step 2: Enable Network Extension
-This is the most important step for website blocking to work.
+- **Websites**: while a session runs, Fuego enables its content filter with your blocklist. Any connection to a blocked domain or one of its subdomains is dropped (`reddit.com` also blocks `www.reddit.com` and `old.reddit.com`). When the session is paused, ended, or the timer reaches zero, the filter is turned off.
+- **Apps**: when a session starts, running blocked apps are asked to quit, and any blocked app launched during the session is quit right away. Apps match by name (`Slack`) or bundle ID (`com.tinyspeck.slackmacgap`), case-insensitively.
+- Editing the blocklist during a session takes effect immediately.
 
-1. Click the 🔥 menu bar icon
-2. Go to Settings
-3. Click **"Setup Network Extension"** button
-4. **A system dialog will appear** asking for permission
-5. Click **"Allow"** when prompted
+## Settings
 
-### Step 3: System Preferences Setup
-After clicking "Allow", you need to manually enable the extension:
-
-1. Open **System Preferences** (or System Settings on macOS 13+)
-2. Go to **Privacy & Security**
-3. Scroll down to **Login Items & Extensions**
-4. Click on **Network Extensions**
-5. **Enable "Fuego Content Filter"**
-
-### Step 4: Verify Setup
-1. Return to Fuego in the menu bar
-2. The status should now show "Active" or "Ready"
-3. If it shows "Not Configured", repeat steps 2-3
-
-## Usage
-
-### Adding Websites to Block
-1. Click the 🔥 menu bar icon
-2. Click **Settings**
-3. In the "Blocked Sites" section:
-   - Type a domain name (like `reddit.com`)
-   - Press Enter or click "Add"
-4. The site will be added to your blocklist
-
-### Starting a Focus Session
-1. Click the 🔥 menu bar icon
-2. Set your timer duration (5-120 minutes)
-3. Click **"Start Focus"**
-4. The timer will begin and websites will be blocked
-
-### Adding Apps to Block
-1. Click the 🔥 menu bar icon
-2. Click **Settings**
-3. In the "Blocked Apps" section:
-   - Type the app name (like `Discord`)
-   - Press Enter or click "Add"
-4. The app will be prevented from launching during focus sessions
+| Setting | Description |
+| --- | --- |
+| duration | Length of a focus session in minutes |
+| launch at login | Start Fuego when you log in (off by default) |
+| websites | Domains to block. URLs are accepted and trimmed to the domain |
+| apps | App names or bundle IDs to quit during a session |
 
 ## Troubleshooting
 
-### "Network Extension Not Working"
+**Website blocking says "not set up" or "needs approval"**
+Press **set up**, then approve Fuego in **System Settings → General → Login Items & Extensions → Network Extensions**. Make sure Fuego.app is in `/Applications`.
 
-**Problem**: Websites aren't being blocked despite setup.
+**Website blocking says "error"**
+The message under the status explains why. Common causes:
+- The app isn't in `/Applications`.
+- The build isn't signed with a team that has the Network Extension capability (local unsigned builds can't load the filter).
+- You declined the content-filter prompt. Remove Fuego under **System Settings → Network → Filters** and press **set up** again.
 
-**Solutions**:
-1. **Check System Preferences**:
-   - Privacy & Security → Login Items & Extensions → Network Extensions
-   - Ensure "Fuego Content Filter" is enabled
-   
-2. **Restart Fuego**:
-   - Quit Fuego completely (right-click menu bar icon → Quit)
-   - Relaunch from Applications
-   
-3. **Reset Network Extension**:
-   - System Preferences → Privacy & Security → Login Items & Extensions
-   - Turn OFF "Fuego Content Filter"
-   - Wait 10 seconds
-   - Turn it back ON
-   - Restart Fuego
+**A site still loads during a session**
+- Check the status says **blocking**.
+- Browsers can keep an existing connection open; reload or restart the browser.
+- Check the exact domain in the address bar; add it if it's on a different domain (e.g. `youtu.be` as well as `youtube.com`).
 
-### "Permission Denied" Errors
+**Remove Fuego completely**
+Quit Fuego and drag it from `/Applications` to the Trash. macOS asks to remove the system extension. You can also remove the filter under **System Settings → Network → Filters**.
 
-**Problem**: System won't allow Network Extension setup.
-
-**Solutions**:
-1. **Check macOS version**: Requires macOS 12.0+
-2. **Try as admin user**: Network Extensions require admin privileges
-3. **Check System Integrity Protection**: Must be enabled (default)
-
-### Blocked Sites Still Loading
-
-**Problem**: Websites load despite being on blocklist.
-
-**Solutions**:
-1. **Wait 30 seconds**: Network Extension changes take time to propagate
-2. **Check domain format**: Use `reddit.com` not `https://www.reddit.com`
-3. **Clear browser cache**: Old pages might be cached
-4. **Try incognito/private browsing**: Tests without cache
-
-### App Not Responding
-
-**Problem**: Fuego menu bar widget won't open.
-
-**Solutions**:
-1. **Force quit and restart**:
-   ```bash
-   killall Fuego
-   open /Applications/Fuego.app
-   ```
-2. **Check Activity Monitor**: Look for multiple Fuego processes
-3. **Restart your Mac**: Last resort for system-level issues
-
-### Timer Not Working
-
-**Problem**: Focus sessions don't start or track properly.
-
-**Solutions**:
-1. **Check system notifications**: Ensure Fuego can send notifications
-2. **System Preferences**: Privacy & Security → Notifications → Fuego → Allow
-3. **Restart the session**: Stop and start again
-
-## Advanced Configuration
-
-### Custom App Group
-If you're building from source, you may need to change the app group:
-
-1. In Xcode, select the Fuego target
-2. Go to Signing & Capabilities
-3. Update the App Group to match your team ID
-4. Do the same for FuegoContentFilter target
-5. Update `SharedBlocklist.swift` to use your app group name
-
-### Debug Logging
-To see Network Extension logs:
-
-1. Open **Console.app**
-2. Search for "Fuego" or "FuegoContentFilter"
-3. Look for error messages or debugging info
-
-### Manual Network Extension Registration
-If automatic registration fails:
-
-1. Open Terminal
-2. Run: `systemextensionsctl list`
-3. Look for Fuego-related extensions
-4. If needed, reset: `systemextensionsctl reset`
-
-## Uninstalling
-
-### Complete Removal
-1. **Quit Fuego**: Right-click menu bar icon → Quit
-2. **Remove app**: Drag Fuego.app to Trash
-3. **Clean up preferences**:
-   ```bash
-   rm -rf ~/Library/Preferences/com.fuego.focus-app.plist
-   rm -rf ~/Library/Application\ Support/Fuego
-   ```
-4. **Remove Network Extension**:
-   - System Preferences → Privacy & Security → Login Items & Extensions
-   - Turn OFF "Fuego Content Filter"
-
-### Homebrew Removal
+**Logs**
 ```bash
-brew uninstall --cask fuego
+log stream --predicate 'subsystem == "dev.getfuego.FuegoFocus"'
 ```
-
-## FAQ
-
-**Q: Is Fuego safe to use?**
-A: Yes. Fuego is open-source and uses Apple's official Network Extension APIs. It only blocks network requests, doesn't intercept or store your data.
-
-**Q: Why does it need Network Extension permissions?**
-A: System-level website blocking requires these permissions. This is the most reliable way to block websites across all browsers and apps.
-
-**Q: Can I use Fuego with VPN?**
-A: Yes, but test thoroughly. Some VPN configurations might interfere with Network Extensions.
-
-**Q: Does Fuego work with all browsers?**
-A: Yes. Network Extensions work at the system level, blocking domains regardless of which browser you use.
-
-**Q: Can I export/import my blocklist?**
-A: Currently no, but this feature is planned for a future update.
-
-## Getting Help
-
-- **Bug reports**: [GitHub Issues](https://github.com/jonaylor89/fuego/issues)
-- **Questions**: [GitHub Discussions](https://github.com/jonaylor89/fuego/discussions)
-- **Feature requests**: [GitHub Issues](https://github.com/jonaylor89/fuego/issues) with feature template
-
----
-
-**Still having trouble?** Create an issue on GitHub with:
-- Your macOS version
-- Fuego version
-- Detailed description of the problem
-- Console logs if available

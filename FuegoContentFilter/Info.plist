@@ -17,21 +17,22 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>15.5</string>
-	<key>NSExtension</key>
-	<dict>
-		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.networkextension.filter-data</string>
-		<key>NSExtensionPrincipalClass</key>
-		<string>$(PRODUCT_MODULE_NAME).FilterProvider</string>
-	</dict>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSSystemExtensionUsageDescription</key>
-	<string>Fuego uses a system extension to block distracting websites during focus sessions, helping you maintain concentration.</string>
-	<key>NSNetworkExtensionUsageDescription</key>
-	<string>Fuego uses a network extension to block distracting websites during focus sessions, helping you maintain concentration.</string>
+	<string>Fuego uses this to block distracting websites during your focus sessions.</string>
+	<key>NetworkExtension</key>
+	<dict>
+		<key>NEMachServiceName</key>
+		<string>group.dev.getfuego.FuegoFocus.FuegoContentFilter</string>
+		<key>NEProviderClasses</key>
+		<dict>
+			<key>com.apple.networkextension.filter-data</key>
+			<string>$(PRODUCT_MODULE_NAME).FilterProvider</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

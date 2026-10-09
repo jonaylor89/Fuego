@@ -63,3 +63,13 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Release builds
+build/
+*.profraw
+
+# Local secrets (see .env)
+.env
+.env.*
+*.p8
+*.p12

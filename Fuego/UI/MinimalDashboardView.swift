@@ -28,7 +28,7 @@ struct MinimalDashboardView: View {
             
             // Central focus area
             VStack(spacing: 32) {
-                if let session = core.currentSession {
+                if core.currentSession != nil {
                     // Active session state
                     VStack(spacing: 16) {
                         Text(formatDuration(core.timerState.remainingTime))
@@ -36,7 +36,7 @@ struct MinimalDashboardView: View {
                             .fontWeight(.ultraLight)
                             .foregroundColor(.primary)
                         
-                        Text(core.sessionManager.isPaused ? "paused" : "focus")
+                        Text(core.isPaused ? "paused" : "focus")
                             .font(.system(.caption, design: .monospaced))
                             .foregroundColor(.secondary)
                             .textCase(.lowercase)
@@ -45,22 +45,22 @@ struct MinimalDashboardView: View {
                     // Minimal controls
                     HStack(spacing: 24) {
                         Button(action: {
-                            Task { 
-                                if core.sessionManager.isPaused {
-                                    try? await core.resumeSession()
+                            Task {
+                                if core.isPaused {
+                                    await core.resumeSession()
                                 } else {
-                                    try? await core.pauseSession()
+                                    await core.pauseSession()
                                 }
                             }
                         }) {
-                            Text(core.sessionManager.isPaused ? "resume" : "pause")
+                            Text(core.isPaused ? "resume" : "pause")
                                 .font(.system(.caption, design: .monospaced))
                                 .foregroundColor(.primary)
                         }
                         .buttonStyle(.plain)
                         
                         Button("end") {
-                            Task { try? await core.endSession() }
+                            Task { await core.endSession() }
                         }
                         .font(.system(.caption, design: .monospaced))
                         .foregroundColor(.secondary)
@@ -75,7 +75,7 @@ struct MinimalDashboardView: View {
                             .foregroundColor(.secondary)
                         
                         Button("begin") {
-                            Task { try? await core.startSession() }
+                            Task { await core.startSession() }
                         }
                         .font(.system(.body, design: .monospaced))
                         .foregroundColor(.primary)
@@ -83,6 +83,10 @@ struct MinimalDashboardView: View {
                     }
                 }
             }
+            
+            statusMessage
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
             
             Spacer()
             
@@ -96,6 +100,13 @@ struct MinimalDashboardView: View {
                 .buttonStyle(.plain)
                 
                 Spacer()
+                
+                Button("quit") {
+                    NSApp.terminate(nil)
+                }
+                .font(.system(.caption, design: .monospaced))
+                .foregroundColor(.secondary)
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 20)
@@ -105,6 +116,37 @@ struct MinimalDashboardView: View {
         .sheet(isPresented: $showingSettings) {
             MinimalSettingsView()
                 .environmentObject(core)
+        }
+    }
+    
+    /// Errors, plus a nudge when website blocking can't work yet.
+    @ViewBuilder
+    private var statusMessage: some View {
+        if let error = core.lastError {
+            Text(error)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundColor(.red)
+                .multilineTextAlignment(.center)
+        } else if core.filterStatus == .awaitingApproval {
+            Button("allow fuego in system settings to block sites") {
+                core.filter.openSystemSettings()
+            }
+            .font(.system(.caption2, design: .monospaced))
+            .foregroundColor(.orange)
+            .buttonStyle(.plain)
+        } else if core.filterStatus == .disabled {
+            Button("site blocking is off in system settings") {
+                core.filter.openSystemSettings()
+            }
+            .font(.system(.caption2, design: .monospaced))
+            .foregroundColor(.orange)
+            .buttonStyle(.plain)
+        } else if core.currentSession == nil, core.settings.blockedWebsites.isEmpty,
+            core.settings.blockedApplications.isEmpty
+        {
+            Text("add sites or apps to block in settings")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundColor(.secondary)
         }
     }
     

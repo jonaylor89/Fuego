@@ -91,7 +91,7 @@ indirect enum TimerState: Equatable {
 // MARK: - Settings
 
 struct FuegoSettings: Codable {
-    var launchAtLogin: Bool = true
+    var launchAtLogin: Bool = false
     var blockedWebsites: Set<String> = []
     var blockedApplications: Set<String> = []
     var timerDuration: TimeInterval = 25 * 60 // 25 minutes

@@ -4,7 +4,7 @@ import AppKit
 @main
 struct FuegoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
+
     var body: some Scene {
         Settings {
             EmptyView()
@@ -12,82 +12,94 @@ struct FuegoApp: App {
     }
 }
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
-    private var popover: NSPopover?
-    private var fuegoCore: FuegoCore?
-    
+    private let popover = NSPopover()
+    private let fuegoCore = FuegoCore()
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        #if !DEBUG
+        // macOS only installs the content filter for apps in /Applications. Opening Fuego
+        // from the disk image or Downloads runs it from a temporary copy instead.
+        guard Bundle.main.bundlePath.hasPrefix("/Applications/") else {
+            askToMoveToApplications()
+            return
+        }
+        #endif
         setupMenuBar()
-        setupCore()
-        
-        // Hide dock icon for menu bar only app
-        NSApp.setActivationPolicy(.accessory)
+        UpdateController.shared.startIfConfigured()
+        Task { await fuegoCore.start() }
+    }
+
+    private func askToMoveToApplications() {
+        let alert = NSAlert()
+        alert.messageText = "Move Fuego to Applications"
+        alert.informativeText = "Fuego can only block websites when it runs from your Applications folder. Drag Fuego into Applications, then open it from there."
+        alert.addButton(withTitle: "Quit")
+        NSApp.activate()
+        alert.runModal()
+        NSApp.terminate(nil)
     }
     
     private func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        
+
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "flame.fill", accessibilityDescription: "Fuego")
-            button.action = #selector(togglePopover(_:))
+            button.action = #selector(statusItemClicked(_:))
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
-        
-        setupPopover()
-    }
-    
-    private func setupPopover() {
-        popover = NSPopover()
-        popover?.contentSize = NSSize(width: 280, height: 360)
-        popover?.behavior = .transient
-        
-        // Create the core first if needed
-        if fuegoCore == nil {
-            Task { @MainActor in
-                fuegoCore = FuegoCore()
-                await setupPopoverContent()
-            }
-        } else {
-            Task { @MainActor in
-                await setupPopoverContent()
-            }
-        }
-    }
-    
-    @MainActor
-    private func setupPopoverContent() async {
-        popover?.contentViewController = NSHostingController(
+
+        popover.contentSize = NSSize(width: 280, height: 360)
+        popover.behavior = .transient
+        popover.contentViewController = NSHostingController(
             rootView: DashboardView()
-                .environmentObject(fuegoCore!)
+                .environmentObject(fuegoCore)
         )
     }
-    
-    @MainActor
-    private func setupCore() {
-        fuegoCore = FuegoCore()
-        
-        // Run persistence test for debugging
-        #if DEBUG
-        // Test removed for simplicity
-        #endif
-    }
-    
-    @objc private func togglePopover(_ sender: AnyObject?) {
-        if let button = statusItem?.button {
-            if popover?.isShown == true {
-                popover?.performClose(sender)
-            } else {
-                popover?.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
-                popover?.contentViewController?.view.window?.makeKey()
-            }
+
+    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
+        if NSApp.currentEvent?.type == .rightMouseUp {
+            showMenu()
+        } else {
+            togglePopover(sender)
         }
     }
+
+    private func togglePopover(_ sender: NSStatusBarButton) {
+        if popover.isShown {
+            popover.performClose(sender)
+        } else {
+            popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
+    }
+
+    private func showMenu() {
+        let menu = NSMenu()
+        if UpdateController.shared.isAvailable {
+            let updates = menu.addItem(withTitle: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+            updates.target = self
+            menu.addItem(.separator())
+        }
+        menu.addItem(withTitle: "Quit Fuego", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        statusItem?.menu = nil  // so left clicks open the popover again
+    }
+
+    @objc private func checkForUpdates() {
+        UpdateController.shared.checkForUpdates()
+    }
     
-    func applicationWillTerminate(_ notification: Notification) {
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        // End the session first so websites aren't left blocked after quitting
         Task {
-            await fuegoCore?.blockingEngine.cleanup()
-            fuegoCore?.shutdown()
+            await fuegoCore.shutdown()
+            sender.reply(toApplicationShouldTerminate: true)
         }
+        return .terminateLater
     }
 }

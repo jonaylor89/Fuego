@@ -1,180 +1,45 @@
 # 🔥 Fuego Launch TODO
 
-Pre-launch checklist for getting Fuego ready for public release.
+What's left before the first public release.
+
+## ✅ Done
+
+- [x] Content filter packaged as a system extension and activated with `OSSystemExtensionRequest`
+- [x] Blocklist delivered to the filter through its configuration (the root-run filter can't read the app group)
+- [x] Hostname detection for browsers that connect by IP (TLS SNI, HTTP `Host`, QUIC fallback)
+- [x] Blocking ends when the timer does, and lapses on its own if the app dies
+- [x] Code signing with a single team; app runs and blocks on a development-signed build
+- [x] Unit tests for domain matching and hostname sniffing
+- [x] App blocking (needed the main app out of the App Sandbox, which can't send the quit event; the filter is still sandboxed)
+
+## 🔧 Release
+
+- [x] Developer ID signing, with the content filter entitlement converted automatically
+- [x] Notarization, stapling, and DMG (`scripts/release.sh`)
+- [x] Sparkle auto-updates; tested 1.0.1 → 1.0.2 end to end, including the content filter swap
+- [x] CI (build and test on every PR) and a Release workflow that publishes to GitHub Releases
+- [x] Homebrew cask (`Casks/fuego.rb`); the Release workflow updates the tap
+- [ ] Add the repository secrets listed in CONTRIBUTING.md → Releasing
+- [ ] Run the Release workflow for 1.0.0 and check the first CI release by installing it
+- [ ] README: replace "hasn't had its first release" with the download link and `brew install jonaylor89/tap/fuego`
+- [ ] Later: submit to the main homebrew-cask repository once Fuego meets its notability requirements
+- [ ] Before 1 Feb 2027: the Developer ID certificate in `APPLE_CERTIFICATE_BASE64` (serial 70EC6B1EA0A0BC1A) expires. Export a newer one (the G2 certificates expire in 2030 and 2031) and update the two certificate secrets.
+
+## 🧪 Testing Before Launch
+
+- [ ] First-run approval flow from the notarized DMG on a Mac that has never had Fuego (this machine had development builds installed)
+- [x] Chrome (incl. forced HTTP/3), Brave, Firefox (incl. DNS over HTTPS + ECH), and Safari block listed sites and load others
+- [ ] Restart mid-session: blocking lifts by the session's end time, or as soon as Fuego relaunches (sessions aren't saved yet)
+- [ ] App blocking quits apps from the notarized release build (check for an Automation prompt)
+- [ ] Apple Silicon and Intel
 
 ## 🎬 Website & Media
 
-### High Priority
-- [ ] **Create menu bar demo GIF** (fuego-menubar-demo.gif)
-  - Show: menu bar icon → click → widget opens → start session → close widget
-  - Size: 320px wide, under 1MB, 3-4 seconds
-  - Place in `/website/` folder
+- [ ] **Menu bar demo GIF** (`website/fuego-menubar-demo.gif`): click the menu bar icon, open the popover, start a session. 320px wide, under 1MB.
+- [ ] Point the download link at the first release once it exists
 
-- [ ] **Add real download links**
-  - Replace `href="#"` placeholders with actual download URLs
-  - Set up GitHub releases page first
-  - Test all download links work
+## 💡 After Launch
 
-## 🔧 Xcode & App Configuration
-
-### High Priority
-- [ ] **Fix Network Extension registration**
-  - Update `FuegoContentFilter.entitlements` with proper team ID
-  - Update `Fuego.entitlements` with proper team ID and app group
-  - Ensure app group name matches across main app and extension
-  - Test extension loads and registers properly
-
-- [ ] **Code signing setup**
-  - Configure proper provisioning profiles
-  - Set up Developer ID certificates for distribution
-  - Enable hardened runtime
-  - Configure notarization settings
-
-- [ ] **Build configuration**
-  - Set proper bundle identifiers
-  - Update version numbers (start with 1.0.0)
-  - Configure release build settings
-  - Test archive builds successfully
-
-### Medium Priority
-- [ ] **Info.plist updates**
-  - Add proper app description and copyright
-  - Set minimum macOS version to 12.0
-  - Add usage descriptions if needed
-  - Configure proper icon references
-
-- [ ] **Test Network Extension flow**
-  - Test initial setup and permissions request
-  - Verify blocking works correctly
-  - Test enabling/disabling extension
-  - Check system preferences integration
-
-## 📦 Distribution
-
-### High Priority
-- [ ] **Create GitHub release workflow**
-  - Set up GitHub Actions for automated builds
-  - Create release templates
-  - Test release process end-to-end
-
-- [ ] **Create DMG installer**
-  - Design simple DMG with app and Applications folder
-  - Test DMG installation process
-  - Ensure proper permissions and signing
-
-- [ ] **Notarization setup**
-  - Configure Apple Developer account
-  - Set up notarization in Xcode
-  - Test full notarization workflow
-
-### Medium Priority
-- [ ] **Homebrew Cask**
-  - Fork homebrew-cask repository
-  - Create cask file for Fuego
-  - Test installation via `brew install --cask fuego`
-  - Submit PR to homebrew-cask
-
-Example cask file:
-```ruby
-cask "fuego" do
-  version "1.0.0"
-  sha256 "your-sha256-here"
-
-  url "https://github.com/yourusername/fuego/releases/download/v#{version}/Fuego-#{version}.dmg"
-  name "Fuego"
-  desc "Focus app that blocks distracting websites and apps"
-  homepage "https://getfuego.dev"
-
-  livecheck do
-    url :url
-    strategy :github_latest
-  end
-
-  app "Fuego.app"
-
-  zap trash: [
-    "~/Library/Preferences/com.fuego.focus-app.plist",
-    "~/Library/Application Support/Fuego",
-  ]
-end
-```
-
-## 📝 Documentation
-
-### High Priority
-- [ ] **Update main README.md**
-  - Add screenshots or GIF
-  - Update build instructions
-  - Add proper setup guide
-  - Include troubleshooting section
-
-- [ ] **Create SETUP_INSTRUCTIONS.md**
-  - Detailed Network Extension setup
-  - System requirements
-  - Troubleshooting common issues
-  - Permission explanations
-
-### Medium Priority
-- [ ] **Add contributing guidelines**
-  - CONTRIBUTING.md file
-  - Code style guidelines
-  - Pull request template
-
-## 🚀 Launch Preparation
-
-### High Priority
-- [ ] **Test full user journey**
-  - Download → Install → Setup → Use → Uninstall
-  - Test on fresh macOS installation
-  - Verify all permissions work correctly
-
-### Medium Priority
-- [ ] **Launch assets**
-  - Social media images (Twitter, etc.)
-  - Product Hunt submission assets
-  - Press kit with screenshots
-
-- [ ] **Community setup**
-  - GitHub issues templates
-
-## 🔍 Final Testing
-
-### Before Launch
-- [ ] **Cross-platform testing**
-  - Test on Intel and Apple Silicon Macs
-  - Test on macOS 12, 13, 14+
-  - Verify Network Extension works on all versions
-
-- [ ] **Security review**
-  - Code review for security issues
-  - Ensure no secrets in code
-  - Verify proper permission handling
-
-- [ ] **Performance testing**
-  - Test with large blocklists
-  - Verify low memory usage
-  - Check for memory leaks
-
-## 📋 Launch Day
-
-### Ready to Ship
-- [ ] **Create first release**
-  - Tag version 1.0.0
-  - Upload DMG to GitHub releases
-  - Update website download links
-
-- [ ] **Submit to directories**
-  - Submit Homebrew cask PR
-  - Add to relevant software directories
-  - Post on social media
-
----
-
-## Notes
-
-- **Priority**: Focus on High Priority items first
-- **Testing**: Each item should be tested thoroughly
-- **Documentation**: Keep user-facing docs simple and clear
-- **Timeline**: Allow 1-2 weeks for high priority items
-
-**Current Status**: 🟡 In Progress
+- [ ] Session history (sessions are only kept in memory today)
+- [ ] Pick apps to block from a list instead of typing names
+- [ ] Notification when a session ends

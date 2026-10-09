@@ -2,301 +2,94 @@ import AppKit
 import Combine
 import Foundation
 import Logging
-import NetworkExtension
-import Security
 
-/// Manages website and application blocking functionality
+/// Turns website and app blocking on and off for a focus session.
 @MainActor
-class BlockingEngine: ObservableObject {
+final class BlockingEngine: ObservableObject {
     private let logger = Logger(label: "dev.getfuego.blocking")
 
-    @Published var isActive: Bool = false
-    @Published var currentBlockedWebsites: Set<String> = []
+    @Published private(set) var isActive = false
 
-    private var filterManager: NEFilterManager?
-    private var localServer: LocalBlockingServer
-    private var appBlockingManager: AppBlockingManager
+    let filter = FilterController()
+    private let appBlocker = AppBlocker()
 
-    init() {
-        self.localServer = LocalBlockingServer()
-        self.appBlockingManager = AppBlockingManager()
-        setupNetworkExtension()
+    /// Blocks `websites` and `applications` until `until`.
+    /// Website blocking needs the content filter to be set up; this sets it up if it isn't.
+    func block(websites: Set<String>, applications: Set<String>, until: Date) async throws {
+        if !websites.isEmpty {
+            if filter.status != .ready {
+                try await filter.setUp()
+            }
+            try await filter.apply(FilterPolicy(blockedDomains: websites, blockUntil: until))
+        }
+        appBlocker.start(blocking: applications)
+        isActive = true
+        logger.info("Blocking \(websites.count) sites and \(applications.count) apps")
     }
 
-    // MARK: - Public Interface
-
-    /// Apply blocking rules to start filtering
-    func applyRules(_ blockedWebsites: Set<String>, _ blockedApplications: Set<String>) async throws
-    {
-        logger.info("Applying blocking rules")
-
-        do {
-            // Apply website blocking
-            try await applyWebsiteBlocking(blockedWebsites)
-
-            // Apply app blocking
-            try await appBlockingManager.applyRules(blockedApplications)
-
-            isActive = true
-            logger.info("Blocking rules applied successfully")
-        } catch {
-            logger.error("Failed to apply blocking rules: \(error)")
-
-            // Show user-friendly error message if permission denied
-            if error is BlockingError || (error as NSError).code == 513 {
-                await MainActor.run {
-                    let alert = NSAlert()
-                    alert.messageText = "Administrator Access Required"
-                    alert.informativeText =
-                        "Fuego needs administrator access to block websites by modifying the hosts file. Please enter your password when prompted."
-                    alert.alertStyle = .informational
-                    alert.addButton(withTitle: "OK")
-                    alert.runModal()
-                }
-            }
-
-            throw error
-        }
-    }
-
-    /// Disable all blocking
-    func disable() async {
-        logger.info("Disabling blocking")
-
-        localServer.stop()
-        await appBlockingManager.disableBlocking()
-
-        if let filterManager = filterManager {
-            filterManager.removeFromPreferences { error in
-                if let error = error {
-                    self.logger.error("Failed to remove filter: \(error)")
-                }
+    func unblock() async {
+        appBlocker.stop()
+        if filter.status == .ready {
+            do {
+                try await filter.apply(.off)
+            } catch {
+                logger.error("Failed to clear filter policy: \(error)")
             }
         }
-
         isActive = false
-        logger.info("Blocking disabled")
+        logger.info("Blocking stopped")
     }
-
-    /// Clean up hosts file when app terminates
-    func cleanup() async {
-        logger.info("Cleaning up blocking engine")
-        localServer.stop()
-        await restoreHostsFileOnExit()
-    }
-
-    private func restoreHostsFileOnExit() async {
-        let backupPath = "/tmp/fuego_hosts_backup"
-
-        guard FileManager.default.fileExists(atPath: backupPath) else {
-            logger.info("No hosts backup found, nothing to restore")
-            return
-        }
-
-        do {
-            let script = """
-                do shell script "cp '\(backupPath)' /etc/hosts" without altering line endings
-                """
-
-            let task = Process()
-            task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-            task.arguments = ["-e", script]
-
-            try task.run()
-            task.waitUntilExit()
-
-            if task.terminationStatus == 0 {
-                try FileManager.default.removeItem(atPath: backupPath)
-                logger.info("Hosts file restored on app exit")
-            }
-        } catch {
-            logger.error("Failed to restore hosts file on exit: \(error)")
-        }
-    }
-
-    /// Check if a URL should be blocked
-    func shouldBlockURL(_ url: URL) -> Bool {
-        guard isActive else { return false }
-
-        let host = url.host?.lowercased() ?? ""
-
-        // Check blocked websites
-        return currentBlockedWebsites.contains(host)
-    }
-
-    // MARK: - Private Methods
-
-    private func setupNetworkExtension() {
-        NEFilterManager.shared().loadFromPreferences { error in
-            if let error = error {
-                self.logger.error("Failed to load filter preferences: \(error)")
-            } else {
-                self.filterManager = NEFilterManager.shared()
-            }
-        }
-    }
-
-    private func applyWebsiteBlocking(_ blockedWebsites: Set<String>) async throws {
-        currentBlockedWebsites = blockedWebsites
-
-        if !blockedWebsites.isEmpty {
-            // Start local server to serve stoic quotes
-            try await localServer.start()
-
-            // Set up one-time hosts file redirect to localhost (requires admin once)
-            try await setupInitialHostsRedirect(for: Array(blockedWebsites))
-        }
-    }
-
-    private func setupInitialHostsRedirect(for domains: [String]) async throws {
-        // Only modify hosts file once per app session, not every focus session
-        let hostsPath = "/etc/hosts"
-        let backupPath = "/tmp/fuego_hosts_backup"
-
-        // Check if we already have our entries
-        let currentContent = try String(contentsOfFile: hostsPath)
-        if currentContent.contains("# Fuego Focus App") {
-            logger.info("Hosts file already configured for Fuego")
-            return
-        }
-
-        // Backup original hosts file
-        try currentContent.write(toFile: backupPath, atomically: true, encoding: .utf8)
-
-        // Add entries to redirect to localhost:8080
-        var newContent = currentContent
-        newContent += "\n# Fuego Focus App - START\n"
-
-        for domain in domains {
-            newContent += "127.0.0.1 \(domain)\n"
-            newContent += "127.0.0.1 www.\(domain)\n"
-        }
-
-        newContent += "# Fuego Focus App - END\n"
-
-        // Write with admin privileges (one-time setup)
-        try await writeHostsFileOneTime(content: newContent)
-        logger.info("Hosts file configured to redirect \(domains.count) domains to local server")
-    }
-
-    private func writeHostsFileOneTime(content: String) async throws {
-        let tempPath = "/tmp/fuego_new_hosts"
-        try content.write(toFile: tempPath, atomically: true, encoding: .utf8)
-
-        let script = """
-            do shell script "cp '\(tempPath)' /etc/hosts" with administrator privileges
-            """
-
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        task.arguments = ["-e", script]
-
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = pipe
-
-        try task.run()
-        task.waitUntilExit()
-
-        try? FileManager.default.removeItem(atPath: tempPath)
-
-        if task.terminationStatus != 0 {
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let error = String(data: data, encoding: .utf8) ?? "Unknown error"
-            logger.error("Failed to write hosts file: \(error)")
-            throw BlockingError.hostsFileWriteError
-        }
-    }
-
-    // Network extension filtering removed for simplicity
 }
 
-// MARK: - App Blocking Management
+// MARK: - App Blocking
 
-class AppBlockingManager {
+/// Quits blocked apps and keeps them from staying open while blocking is on.
+@MainActor
+final class AppBlocker {
     private let logger = Logger(label: "dev.getfuego.appblocking")
-    private var monitoredApps: Set<String> = []
-    private var isBlocking = false
+    private var blockedApps: Set<String> = []
+    private var workspaceObservers: [NSObjectProtocol] = []
 
-    func applyRules(_ blockedApplications: Set<String>) async throws {
-        logger.info("Applying app blocking rules")
+    func start(blocking apps: Set<String>) {
+        stop()
+        blockedApps = Set(apps.map { $0.lowercased() })
+        guard !blockedApps.isEmpty else { return }
 
-        monitoredApps = blockedApplications
-        isBlocking = true
-
-        // Start monitoring running applications
-        startAppMonitoring()
-
-        // Kill currently running blocked apps
-        await terminateBlockedApps(blockedApplications)
-    }
-
-    func disableBlocking() async {
-        logger.info("Disabling app blocking")
-        isBlocking = false
-        monitoredApps.removeAll()
-        stopAppMonitoring()
-    }
-
-    private func startAppMonitoring() {
-        // Monitor for app launches using NSWorkspace notifications
-        NotificationCenter.default.addObserver(
-            forName: NSWorkspace.didLaunchApplicationNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let self = self, self.isBlocking else { return }
-
-            if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]
-                as? NSRunningApplication,
-                let appName = app.localizedName
-            {
-
-                if self.monitoredApps.contains(appName) {
-                    self.logger.info("Terminating blocked app: \(appName)")
-                    app.terminate()
-                }
+        // Activation catches anything that slipped past the launch check
+        let notifications = [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didActivateApplicationNotification]
+        workspaceObservers = notifications.map { name in
+            NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) {
+                [weak self] notification in
+                guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+                else { return }
+                MainActor.assumeIsolated { self?.quitIfBlocked(app) }
             }
         }
+        NSWorkspace.shared.runningApplications.forEach(quitIfBlocked)
     }
 
-    private func stopAppMonitoring() {
-        NotificationCenter.default.removeObserver(
-            self,
-            name: NSWorkspace.didLaunchApplicationNotification,
-            object: nil
-        )
+    func stop() {
+        workspaceObservers.forEach(NSWorkspace.shared.notificationCenter.removeObserver)
+        workspaceObservers = []
+        blockedApps = []
     }
 
-    private func terminateBlockedApps(_ blockedApps: Set<String>) async {
-        let runningApps = NSWorkspace.shared.runningApplications
+    /// Matches on app name ("Discord") or bundle identifier ("com.hnc.Discord").
+    private func quitIfBlocked(_ app: NSRunningApplication) {
+        let names = [app.localizedName, app.bundleIdentifier].compactMap { $0?.lowercased() }
+        guard names.contains(where: blockedApps.contains) else { return }
 
-        for app in runningApps {
-            if let appName = app.localizedName,
-                blockedApps.contains(appName)
-            {
-                logger.info("Terminating running blocked app: \(appName)")
+        logger.info("Quitting blocked app: \(app.localizedName ?? "unknown")")
+        Task { await quit(app) }
+    }
+
+    /// A just-launched app ignores quit requests until it finishes launching, so keep asking for a few seconds.
+    private func quit(_ app: NSRunningApplication) async {
+        for _ in 0..<20 where !app.isTerminated && !blockedApps.isEmpty {
+            if app.isFinishedLaunching {
                 app.terminate()
             }
-        }
-    }
-}
-
-// MARK: - Error Types
-
-enum BlockingError: LocalizedError {
-    case networkExtensionNotAvailable
-    case insufficientPrivileges
-    case hostsFileWriteError
-
-    var errorDescription: String? {
-        switch self {
-        case .networkExtensionNotAvailable:
-            return "Network Extension is not available"
-        case .insufficientPrivileges:
-            return "Insufficient privileges to modify system files"
-        case .hostsFileWriteError:
-            return "Failed to write to hosts file"
+            try? await Task.sleep(for: .milliseconds(500))
         }
     }
 }

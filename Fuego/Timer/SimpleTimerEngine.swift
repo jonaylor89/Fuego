@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import Logging
 
-/// Simple timer engine for basic countdown functionality
+/// Simple countdown timer for a focus session
 @MainActor
 class TimerEngine: ObservableObject {
     private let logger = Logger(label: "dev.getfuego.timer")
@@ -10,112 +10,70 @@ class TimerEngine: ObservableObject {
     @Published var state: TimerState = .idle
 
     private var timer: Timer?
-    private var startTime: Date?
-    private var pausedTime: Date?
-    private var totalPausedDuration: TimeInterval = 0
+    /// Counting against a wall-clock end date keeps the timer right across sleep,
+    /// and in step with the filter's own cutoff.
+    private var endDate: Date?
 
-    // Callbacks for timer events
-    var onWorkStart: (() -> Void)?
-    var onWorkEnd: (() -> Void)?
     var onTimerComplete: (() -> Void)?
 
     // MARK: - Public Interface
 
-    func start(duration: TimeInterval) async throws {
+    func start(duration: TimeInterval) {
         logger.info("Starting timer for \(duration) seconds")
-
-        totalPausedDuration = 0
-        await startWorkPeriod(duration: duration)
+        endDate = Date().addingTimeInterval(duration)
+        state = .work(remaining: duration)
+        scheduleTicks()
     }
 
     func pause() {
-        guard state.isActive && !state.isPaused else { return }
-
+        guard case .work = state else { return }
         logger.info("Pausing timer")
-        pausedTime = Date()
-
-        let currentState = state
-        state = .paused(currentState)
-
-        timer?.invalidate()
-        timer = nil
+        tick()
+        state = .paused(state)
+        endDate = nil
+        cancelTicks()
     }
 
     func resume() {
         guard case .paused(let pausedState) = state else { return }
-
         logger.info("Resuming timer")
-
-        // Add paused duration
-        if let pauseStart = pausedTime {
-            totalPausedDuration += Date().timeIntervalSince(pauseStart)
-        }
-
+        endDate = Date().addingTimeInterval(pausedState.remainingTime)
         state = pausedState
-        pausedTime = nil
-
-        startTimerForCurrentState()
+        scheduleTicks()
     }
 
     func stop() {
         logger.info("Stopping timer")
-
-        timer?.invalidate()
-        timer = nil
+        cancelTicks()
+        endDate = nil
         state = .idle
-        startTime = nil
-        pausedTime = nil
-        totalPausedDuration = 0
     }
 
     // MARK: - Private Methods
 
-    private func startWorkPeriod(duration: TimeInterval) async {
-        logger.info("Starting work period")
-
-        state = .work(remaining: duration)
-        startTime = Date()
-
-        onWorkStart?()
-        startTimerForCurrentState()
-    }
-
-    private func startTimerForCurrentState() {
-        timer?.invalidate()
-
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                await self?.updateTimer()
-            }
+    private func scheduleTicks() {
+        cancelTicks()
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.tick() }
         }
+        RunLoop.main.add(timer, forMode: .common)  // keep ticking while menus are open
+        self.timer = timer
     }
 
-    private func updateTimer() async {
-        switch state {
-        case .work(let remaining):
-            let newRemaining = remaining - 1
-
-            if newRemaining <= 0 {
-                await handleWorkComplete()
-            } else {
-                state = .work(remaining: newRemaining)
-            }
-
-        case .idle, .paused, .shortBreak, .longBreak:
-            // These states don't need updates or are handled elsewhere
-            break
-        }
-    }
-
-    private func handleWorkComplete() async {
-        logger.info("Work period completed")
-
+    private func cancelTicks() {
         timer?.invalidate()
         timer = nil
+    }
 
-        onWorkEnd?()
-        onTimerComplete?()
-
-        state = .idle
+    private func tick() {
+        guard let endDate, case .work = state else { return }
+        let remaining = endDate.timeIntervalSinceNow.rounded()
+        if remaining <= 0 {
+            logger.info("Work period completed")
+            stop()
+            onTimerComplete?()
+        } else {
+            state = .work(remaining: remaining)
+        }
     }
 }

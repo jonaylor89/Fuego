@@ -1,154 +1,163 @@
 import Combine
 import Foundation
 import Logging
+import ServiceManagement
 
 /// Central coordination hub for all Fuego functionality
 @MainActor
 class FuegoCore: ObservableObject {
-    static let shared = FuegoCore()
-
     private let logger = Logger(label: "dev.getfuego.core")
 
     // Core managers
     let sessionManager: SessionManager
-    let blockingEngine: NetworkExtensionBlockingEngine
+    let blockingEngine: BlockingEngine
     let timerEngine: TimerEngine
     let settingsManager: SettingsManager
-    let persistenceManager: PersistenceManager
 
     // Published state
     @Published var currentSession: Session?
-    @Published var isBlocked: Bool = false
+    @Published var isPaused: Bool = false
     @Published var timerState: TimerState = .idle
-    @Published var settings: FuegoSettings = FuegoSettings()
-    @Published var networkExtensionStatus: String = "Unknown"
+    @Published var settings: FuegoSettings
+    @Published var filterStatus: FilterController.Status = .checking
+    /// The most recent failure, shown in the popover until the next action succeeds.
+    @Published var lastError: String?
 
-    private var cancellables = Set<AnyCancellable>()
+    var filter: FilterController { blockingEngine.filter }
 
     init() {
-        // Initialize managers
-        self.persistenceManager = PersistenceManager()
         self.settingsManager = SettingsManager()
-        self.blockingEngine = NetworkExtensionBlockingEngine()
+        self.blockingEngine = BlockingEngine()
         self.timerEngine = TimerEngine()
-        self.sessionManager = SessionManager(persistence: persistenceManager)
-
-        // Load settings
-        loadSettings()
+        self.sessionManager = SessionManager(persistence: PersistenceManager())
+        self.settings = settingsManager.settings
 
         setupBindings()
         logger.info("Fuego Core initialized")
     }
 
     private func setupBindings() {
-        // Session state changes
-        sessionManager.$currentSession
-            .assign(to: &$currentSession)
+        sessionManager.$currentSession.assign(to: &$currentSession)
+        sessionManager.$isPaused.assign(to: &$isPaused)
+        timerEngine.$state.assign(to: &$timerState)
+        blockingEngine.filter.$status.assign(to: &$filterStatus)
 
-        // Blocking state changes
-        blockingEngine.$isActive
-            .assign(to: &$isBlocked)
-
-        // Timer state changes
-        timerEngine.$state
-            .assign(to: &$timerState)
-
-        // Network extension status changes
-        blockingEngine.$extensionStatus
-            .assign(to: &$networkExtensionStatus)
+        timerEngine.onTimerComplete = { [weak self] in
+            Task { await self?.endSession() }
+        }
     }
 
-    private func loadSettings() {
-        settings = settingsManager.loadSettings()
+    /// Called once at launch.
+    func start() async {
+        await filter.start()
+        // Clear blocking left over from a session that ended with a crash
+        if filterStatus == .ready {
+            await blockingEngine.unblock()
+        }
     }
 
     // MARK: - Session Control
 
-    func startSession() async throws {
+    func startSession() async {
+        guard currentSession == nil else { return }
         logger.info("Starting focus session")
-
-        // Start session
-        _ = try await sessionManager.startSession()
-
-        // Apply blocking rules from settings
-        try await blockingEngine.applyRules(settings.blockedWebsites, settings.blockedApplications)
-
-        // Start timer
-        try await timerEngine.start(duration: settings.timerDuration)
+        let duration = settings.timerDuration
+        await run {
+            try await blockingEngine.block(
+                websites: settings.blockedWebsites,
+                applications: settings.blockedApplications,
+                until: Date().addingTimeInterval(duration))
+            _ = try await sessionManager.startSession()
+            timerEngine.start(duration: duration)
+        }
     }
 
-    func pauseSession() async throws {
-        guard currentSession != nil else { return }
-
+    func pauseSession() async {
+        guard currentSession != nil, !isPaused else { return }
         logger.info("Pausing session")
-        try await sessionManager.pauseSession()
-        await blockingEngine.disable()
-        timerEngine.pause()
+        await run {
+            try await sessionManager.pauseSession()
+            timerEngine.pause()
+            await blockingEngine.unblock()
+        }
     }
 
-    func resumeSession() async throws {
-        guard currentSession != nil else { return }
-
+    func resumeSession() async {
+        guard currentSession != nil, isPaused else { return }
         logger.info("Resuming session")
-        try await sessionManager.resumeSession()
-        try await blockingEngine.applyRules(settings.blockedWebsites, settings.blockedApplications)
-        timerEngine.resume()
+        await run {
+            try await blockingEngine.block(
+                websites: settings.blockedWebsites,
+                applications: settings.blockedApplications,
+                until: Date().addingTimeInterval(timerState.remainingTime))
+            try await sessionManager.resumeSession()
+            timerEngine.resume()
+        }
     }
 
-    func endSession() async throws {
+    func endSession() async {
         guard currentSession != nil else { return }
-
         logger.info("Ending session")
-        try await sessionManager.endSession()
-        await blockingEngine.disable()
         timerEngine.stop()
-    }
-
-    // MARK: - Quick Actions
-
-    func toggleSession() async throws {
-        if currentSession != nil {
-            if sessionManager.isPaused {
-                try await resumeSession()
-            } else {
-                try await pauseSession()
-            }
-        } else {
-            try await startSession()
+        await blockingEngine.unblock()
+        await run {
+            try await sessionManager.endSession()
         }
     }
 
     // MARK: - Settings Management
 
-    func updateSettings(_ newSettings: FuegoSettings) async throws {
-        settings = newSettings
-        try settingsManager.saveSettings(newSettings)
+    func updateSettings(_ newSettings: FuegoSettings) async {
+        await run {
+            try settingsManager.saveSettings(newSettings)
+            if newSettings.launchAtLogin != settings.launchAtLogin {
+                try updateLaunchAtLogin(newSettings.launchAtLogin)
+            }
+            settings = newSettings
 
-        // If session is active, update blocking rules
-        if currentSession != nil, !sessionManager.isPaused {
-            try await blockingEngine.applyRules(
-                settings.blockedWebsites, settings.blockedApplications)
+            // Apply new lists right away during an active session
+            if currentSession != nil, !isPaused {
+                try await blockingEngine.block(
+                    websites: settings.blockedWebsites,
+                    applications: settings.blockedApplications,
+                    until: Date().addingTimeInterval(timerState.remainingTime))
+            }
         }
     }
 
-    // MARK: - Network Extension Management
+    private func updateLaunchAtLogin(_ enabled: Bool) throws {
+        if enabled {
+            try SMAppService.mainApp.register()
+        } else {
+            try SMAppService.mainApp.unregister()
+        }
+    }
 
-    func requestNetworkExtensionSetup() async throws {
-        try await blockingEngine.requestInitialSetup()
+    // MARK: - Website Blocking Setup
+
+    func setUpWebsiteBlocking() async {
+        await run {
+            try await filter.setUp()
+        }
     }
 
     // MARK: - Lifecycle
 
-    func shutdown() {
+    func shutdown() async {
         logger.info("Shutting down Fuego Core")
-
-        Task {
-            if currentSession != nil {
-                try? await endSession()
-            }
-            await blockingEngine.cleanup()
+        if currentSession != nil {
+            await endSession()
         }
+    }
 
-        cancellables.removeAll()
+    /// Runs an action, recording any failure in `lastError` for the UI.
+    private func run(_ action: () async throws -> Void) async {
+        do {
+            try await action()
+            lastError = nil
+        } catch {
+            logger.error("\(error)")
+            lastError = error.localizedDescription
+        }
     }
 }

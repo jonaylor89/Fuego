@@ -94,12 +94,35 @@ struct HostSnifferTests {
     private func makeClientHello(serverName: String, paddingBefore: Int) -> Data {
         func u16(_ value: Int) -> [UInt8] { [UInt8(value >> 8), UInt8(value & 0xff)] }
         let name = Array(serverName.utf8)
-        let sni = u16(0x0000) + u16(name.count + 5) + u16(name.count + 3) + [0x00] + u16(name.count) + name
-        let padding = u16(0x0015) + u16(paddingBefore) + [UInt8](repeating: 0, count: paddingBefore)
-        let extensions = padding + sni
-        let body: [UInt8] = [0x03, 0x03] + [UInt8](repeating: 7, count: 32) + [0x00]
-            + u16(2) + [0x13, 0x01] + [0x01, 0x00] + u16(extensions.count) + extensions
-        let handshake: [UInt8] = [0x01, 0x00] + u16(body.count) + body
-        return Data([0x16, 0x03, 0x01] + u16(handshake.count) + handshake)
+
+        // Built step by step: long `+` chains of array literals time out older type checkers.
+        var extensions: [UInt8] = []
+        extensions += u16(0x0015)  // padding
+        extensions += u16(paddingBefore)
+        extensions += [UInt8](repeating: 0, count: paddingBefore)
+        extensions += u16(0x0000)  // server_name
+        extensions += u16(name.count + 5)
+        extensions += u16(name.count + 3)
+        extensions += [0x00]
+        extensions += u16(name.count)
+        extensions += name
+
+        var body: [UInt8] = [0x03, 0x03]  // client version
+        body += [UInt8](repeating: 7, count: 32)  // random
+        body += [0x00]  // session ID
+        body += u16(2)
+        body += [0x13, 0x01]  // cipher suites
+        body += [0x01, 0x00]  // compression
+        body += u16(extensions.count)
+        body += extensions
+
+        var handshake: [UInt8] = [0x01, 0x00]
+        handshake += u16(body.count)
+        handshake += body
+
+        var record: [UInt8] = [0x16, 0x03, 0x01]
+        record += u16(handshake.count)
+        record += handshake
+        return Data(record)
     }
 }

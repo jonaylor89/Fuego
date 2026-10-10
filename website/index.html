@@ -3,37 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f3ec">
     <title>fuego</title>
-    <meta name="description" content="a focus app for macOS that blocks distracting websites and apps">
+    <meta name="description" content="a simple, open-source mac app that blocks distracting websites and apps while you focus">
     <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="manifest" href="assets/site.webmanifest">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <main>
-        <div class="content">
-            <p><a href="https://github.com/jonaylor89/fuego">repository</a> | <a href="#download">download</a></p>
-            
-            <h1>hi, this is fuego.</h1>
-            
-            <p>a focus app for macOS. blocks distracting websites and apps so you can focus on what matters. start a session from the menu bar, and blocked sites stay blocked in every browser until the timer runs out.</p>
+        <nav>
+            <a href="https://github.com/jonaylor89/Fuego">repo</a>
+            <a href="https://github.com/jonaylor89/Fuego/releases">download</a>
+        </nav>
 
-            <p style="text-align: center; margin: 2rem 0;">
-                <img src="/assets/screenshot.jpg" alt="fuego menu bar widget in action" 
-                     style="max-width: 320px; border: 1px solid #eee; border-radius: 6px;">
-            </p>
-            
-            <p>all in native swift. open-source. uses apple's network extensions. free. enjoy.</p>
+        <h1>hi, this is fuego.</h1>
 
-            <h2>requirements</h2>
-            
-            <p>macOS 15.5 or later. apple silicon or intel. a one-time approval for the content filter.</p>
-            
-            <h2 id="download">get it</h2>
-            
-            <p><strong><a href="https://github.com/jonaylor89/fuego/releases/latest">download fuego</a></strong> (latest release)</p>
-            
-            <p>enjoy.</p>
+        <p>it's a mac app i made to stop myself from wandering off.</p>
+
+        <p>pick a time, hit begin, and the sites and apps that eat your day are gone until the timer runs out. in every browser, from the menu bar, no willpower required.</p>
+
+        <p>all in native swift.<br>open-source.<br>free. enjoy.</p>
+
+        <div class="get">
+            <a class="button" href="https://github.com/jonaylor89/Fuego/releases/latest">download</a>
+            <button class="brew" type="button" data-copy="brew install --cask jonaylor89/tap/fuego" aria-label="Copy the Homebrew install command">brew install --cask jonaylor89/tap/fuego</button>
         </div>
+
+        <img class="demo" src="assets/fuego-blocking.jpg" width="1600" height="1039" alt="youtube.com won't load in chrome while the fuego menu bar window counts down a focus session">
+
+        <p class="fine">macOS 15.5 or later. you'll approve fuego's content filter once in system settings.</p>
     </main>
+    <script src="script.js"></script>
 </body>
 </html>

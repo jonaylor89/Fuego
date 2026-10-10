@@ -1,31 +1,17 @@
-// Minimal interactions for simple Fuego website
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Add smooth scrolling for anchor links  
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
+// Click the brew command to copy it.
+document.querySelectorAll("[data-copy]").forEach((button) => {
+    const label = button.textContent;
+    button.addEventListener("click", async () => {
+        try {
+            await navigator.clipboard.writeText(button.dataset.copy);
+            button.textContent = "copied. paste it in your terminal.";
+            button.classList.add("copied");
+        } catch {
+            return; // Clipboard unavailable; the command is still there to select.
+        }
+        setTimeout(() => {
+            button.textContent = label;
+            button.classList.remove("copied");
+        }, 1800);
     });
-    
-    // Simple easter egg - make the flame emoji bigger on triple click
-    let clickCount = 0;
-    const titleElement = document.querySelector('h1');
-    
-    if (titleElement) {
-        titleElement.addEventListener('click', function() {
-            clickCount++;
-            if (clickCount === 3) {
-                this.innerHTML = this.innerHTML.replace('🔥', '<span style="font-size: 1.5em;">🔥</span>');
-                clickCount = 0; // Reset
-            }
-        });
-    }
 });

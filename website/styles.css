@@ -1,4 +1,18 @@
-/* Simple, clean styles inspired by Freewrite */
+/* Warm paper, mono like the app's menu bar window, one ember accent */
+:root {
+    color-scheme: light;
+    --paper: #f7f3ec;
+    --ink: #2a2622;
+    --text: #6f675e;
+    --muted: #9a9187;
+    --ember: #d9531e;
+    --ember-dark: #b8410f;
+    --line: #e5ddd1;
+    --chip: #efe8dc;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,96 +20,127 @@
 }
 
 body {
-    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--paper);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 19px;
     line-height: 1.6;
-    color: #333;
-    background: #fff;
-    font-size: 16px;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
+    -webkit-font-smoothing: antialiased;
 }
 
-.content {
-    max-width: none;
+main {
+    max-width: 640px;
+    padding: 64px 48px 88px;
 }
 
-h1 {
-    font-size: 2rem;
-    font-weight: normal;
-    margin: 2rem 0 1rem 0;
-    color: #000;
-}
-
-h2 {
-    font-size: 1.5rem;
-    font-weight: normal;
-    margin: 2rem 0 1rem 0;
-    color: #000;
-}
-
-p {
-    margin-bottom: 1rem;
-    color: #333;
+nav {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+    font-family: var(--mono);
+    font-size: 14px;
 }
 
 a {
-    color: #0066cc;
-    text-decoration: underline;
+    color: var(--ember);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
 }
 
 a:hover {
-    color: #004499;
+    color: var(--ember-dark);
 }
 
-strong {
-    font-weight: 600;
+h1 {
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 38px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -1px;
+    margin-bottom: 24px;
 }
 
-/* Top navigation links */
-.content > p:first-child {
-    margin-bottom: 3rem;
-    font-size: 0.9rem;
-    color: #666;
+p {
+    max-width: 540px;
+    margin-bottom: 1.4em;
 }
 
+.get {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 8px 0 28px;
+}
 
-
-/* Download section emphasis */
-#download + p strong a {
-    font-size: 1.1rem;
-    color: #000;
+.button,
+.brew {
+    display: inline-flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 18px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 14px;
     text-decoration: none;
-    border-bottom: 2px solid #0066cc;
+    transition: color 0.15s, background-color 0.15s, border-color 0.15s;
 }
 
-#download + p strong a:hover {
-    border-bottom-color: #004499;
+.button {
+    background: var(--ember);
+    color: #fff;
+    font-weight: 500;
 }
 
-/* Mobile responsiveness */
+.button:hover {
+    background: var(--ember-dark);
+    color: #fff;
+}
+
+.brew {
+    max-width: 100%;
+    border: 1px solid var(--line);
+    background: var(--chip);
+    color: var(--text);
+    font-size: 13px;
+    cursor: copy;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.brew:hover,
+.brew.copied {
+    border-color: var(--muted);
+    color: var(--ink);
+}
+
+.demo {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    box-shadow: 0 12px 32px -18px rgba(60, 40, 20, 0.35);
+    margin-bottom: 28px;
+}
+
+.fine {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
 @media (max-width: 600px) {
-    body {
-        padding: 1rem;
+    main {
+        padding: 36px 16px 56px;
     }
-    
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    h2 {
-        font-size: 1.3rem;
-    }
-}
 
-/* Focus on readability */
-@media (prefers-color-scheme: dark) {
     body {
-        background: #fff;
-        color: #333;
+        font-size: 17px;
     }
-    
-    h1, h2 {
-        color: #000;
+
+    h1 {
+        font-size: 30px;
     }
 }

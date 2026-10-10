@@ -13,9 +13,10 @@ struct FuegoApp: App {
 }
 
 @MainActor
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
+    private var outsideClickMonitor: Any?
     private let fuegoCore = FuegoCore()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -54,6 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         popover.contentSize = NSSize(width: 280, height: 360)
         popover.behavior = .transient
+        popover.delegate = self
         popover.contentViewController = NSHostingController(
             rootView: DashboardView()
                 .environmentObject(fuegoCore)
@@ -72,9 +74,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if popover.isShown {
             popover.performClose(sender)
         } else {
+            NSApp.activate()
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
+            // A transient popover only closes on outside clicks while Fuego is the active app,
+            // which a menu bar app often isn't. Clicks in other apps still close it this way.
+            outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(
+                matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.popover.performClose(nil) }
+            }
         }
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        if let outsideClickMonitor {
+            NSEvent.removeMonitor(outsideClickMonitor)
+        }
+        outsideClickMonitor = nil
     }
 
     private func showMenu() {

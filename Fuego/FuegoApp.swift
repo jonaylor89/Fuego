@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 
 @main
 struct FuegoApp: App {
@@ -17,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var outsideClickMonitor: Any?
+    private var timerStateCancellable: AnyCancellable?
     private let fuegoCore = FuegoCore()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -52,6 +54,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             button.target = self
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
+
+        timerStateCancellable = fuegoCore.$timerState
+            .map(\.isActive)
+            .removeDuplicates()
+            .sink { [weak self] isActive in
+                self?.statusItem?.button?.alphaValue = isActive ? 1.0 : 0.45
+            }
 
         popover.contentSize = NSSize(width: 280, height: 360)
         popover.behavior = .transient

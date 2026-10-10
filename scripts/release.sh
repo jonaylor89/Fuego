@@ -37,16 +37,26 @@ if [[ -n "${ASC_KEY_PATH:-}" ]]; then
     AUTH+=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
 fi
 
-VERSION_OVERRIDES=()
-[[ -n "${VERSION:-}" ]] && VERSION_OVERRIDES+=("MARKETING_VERSION=$VERSION")
-[[ -n "${BUILD_NUMBER:-}" ]] && VERSION_OVERRIDES+=("CURRENT_PROJECT_VERSION=$BUILD_NUMBER")
-[[ -n "${SPARKLE_FEED_URL:-}" ]] && VERSION_OVERRIDES+=("SPARKLE_FEED_URL=$SPARKLE_FEED_URL")
+BUILD_SETTINGS=()
+[[ -n "${VERSION:-}" ]] && BUILD_SETTINGS+=("MARKETING_VERSION=$VERSION")
+[[ -n "${BUILD_NUMBER:-}" ]] && BUILD_SETTINGS+=("CURRENT_PROJECT_VERSION=$BUILD_NUMBER")
+[[ -n "${SPARKLE_FEED_URL:-}" ]] && BUILD_SETTINGS+=("SPARKLE_FEED_URL=$SPARKLE_FEED_URL")
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
 if security find-identity -v -p codesigning | grep -q "Developer ID Application: .*($TEAM_ID)"; then
     SIGNING=manual
+    # Sign the archive with Developer ID too: automatic signing builds with a development
+    # profile, which only works on a Mac registered to the team (never a CI runner).
+    # Developer ID needs the "-systemextension" content filter entitlement at build time.
+    BUILD_SETTINGS+=(
+        RELEASE_ENTITLEMENTS_SUFFIX=-DeveloperID
+        CODE_SIGN_STYLE=Manual
+        "CODE_SIGN_IDENTITY=Developer ID Application"
+        "RELEASE_APP_PROFILE=Fuego Developer ID"
+        "RELEASE_FILTER_PROFILE=Fuego Content Filter Developer ID"
+    )
     PROFILE_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
     mkdir -p "$PROFILE_DIR"
     for profile in signing/*.provisionprofile; do
@@ -87,7 +97,7 @@ EOF
 step "Archiving"
 xcodebuild -project Fuego.xcodeproj -scheme Fuego -configuration Release \
     -archivePath "$ARCHIVE" -derivedDataPath "$OUT/DerivedData" "${AUTH[@]}" \
-    ${VERSION_OVERRIDES[@]+"${VERSION_OVERRIDES[@]}"} archive -quiet
+    ${BUILD_SETTINGS[@]+"${BUILD_SETTINGS[@]}"} archive -quiet
 
 VERSION=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleShortVersionString" "$ARCHIVE/Info.plist")
 BUILD=$(/usr/libexec/PlistBuddy -c "Print ApplicationProperties:CFBundleVersion" "$ARCHIVE/Info.plist")

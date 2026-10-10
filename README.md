@@ -15,7 +15,13 @@ Requires macOS 15.5 or later.
 
 ## Download
 
-Fuego hasn't had its first release yet. Until then, build it from source (below).
+**[Download the latest release](https://github.com/jonaylor89/Fuego/releases/latest)** (a notarized DMG), or install with [Homebrew](https://brew.sh):
+
+```bash
+brew install --cask jonaylor89/tap/fuego
+```
+
+Drag Fuego into your Applications folder and open it from there; macOS only turns on its content filter for apps in Applications. Fuego updates itself after that. See [SETUP_INSTRUCTIONS.md](SETUP_INSTRUCTIONS.md) for the one-time approval and troubleshooting.
 
 ## How It Works
 

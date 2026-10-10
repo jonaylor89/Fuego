@@ -58,7 +58,7 @@ macOS only activates system extensions for apps in `/Applications`, so running s
 
 Releases are built by the **Release** workflow (Actions → Release → Run workflow). It picks the next version from the latest GitHub release (patch, minor, or major bump, or an exact version), runs the tests, then runs `scripts/release.sh`, which:
 
-1. Archives with cloud-managed Developer ID signing (Xcode switches the content filter entitlement to `content-filter-provider-systemextension`; the script fails if it didn't).
+1. Archives and signs with the Developer ID certificate and the provisioning profiles in `signing/`, using the `*-DeveloperID.entitlements` files: Developer ID requires the `content-filter-provider-systemextension` entitlement value, while development builds use `content-filter-provider`. The script fails if either bundle ends up without it.
 2. Notarizes and staples the app, and checks Gatekeeper, the entitlements, and the Sparkle keys.
 3. Builds `Fuego-<version>.dmg` and a Sparkle `appcast.xml` signed with the EdDSA key.
 
@@ -86,7 +86,7 @@ The Sparkle public key is in the project's `SPARKLE_PUBLIC_ED_KEY` build setting
 
 ### Releasing from a Mac
 
-`scripts/release.sh` also runs locally, signing through the account in Xcode → Settings → Accounts and the Sparkle key in your login keychain. Upload the files in `build/release/` by hand. To try an update against a local server first, set `SPARKLE_FEED_URL` and `DOWNLOAD_URL_PREFIX` (see the script header).
+`scripts/release.sh` also runs locally. With a Developer ID Application certificate in your keychain it signs the same way CI does; without one, it falls back to the team's cloud-managed certificate through the account in Xcode → Settings → Accounts. It signs the appcast with the Sparkle key in your login keychain. Upload the files in `build/release/` by hand. To try an update against a local server first, set `SPARKLE_FEED_URL` and `DOWNLOAD_URL_PREFIX` (see the script header).
 
 Test a release as a user would: download the DMG, drag Fuego to Applications in Finder, and open it from there. Opening it straight from the disk image runs a temporary copy that can't install the filter, so release builds refuse to run outside `/Applications`.
 

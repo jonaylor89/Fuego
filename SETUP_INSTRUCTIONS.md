@@ -10,7 +10,10 @@ How to install, set up, and use Fuego.
 
 ## Installation
 
-Fuego hasn't had its first release yet; build it from source for now (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+- **Download**: get `Fuego-<version>.dmg` from the [latest release](https://github.com/jonaylor89/Fuego/releases/latest), open it, and drag Fuego into Applications.
+- **Homebrew**: `brew install --cask jonaylor89/tap/fuego`
+
+Fuego checks for updates on its own and installs them through [Sparkle](https://sparkle-project.org). You can also right-click the 🔥 and choose **Check for Updates…**.
 
 Fuego must live in your **Applications** folder. macOS won't turn on its content filter from anywhere else.
 

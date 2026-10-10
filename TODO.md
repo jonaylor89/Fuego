@@ -1,6 +1,6 @@
 # 🔥 Fuego Launch TODO
 
-What's left before the first public release.
+1.0.0 is out: https://github.com/jonaylor89/Fuego/releases/tag/v1.0.0
 
 ## ✅ Done
 
@@ -19,9 +19,10 @@ What's left before the first public release.
 - [x] Sparkle auto-updates; tested 1.0.1 → 1.0.2 end to end, including the content filter swap
 - [x] CI (build and test on every PR) and a Release workflow that publishes to GitHub Releases
 - [x] Homebrew cask (`Casks/fuego.rb`); the Release workflow updates the tap
-- [ ] Add the repository secrets listed in CONTRIBUTING.md → Releasing
-- [ ] Run the Release workflow for 1.0.0 and check the first CI release by installing it
-- [ ] README: replace "hasn't had its first release" with the download link and `brew install jonaylor89/tap/fuego`
+- [x] Add the repository secrets listed in CONTRIBUTING.md → Releasing
+- [x] Run the Release workflow for 1.0.0 (notarized, appcast live, cask in the tap)
+- [ ] Install 1.0.0 from the release and confirm it updates to the next release through Sparkle
+- [x] README: download link and `brew install --cask jonaylor89/tap/fuego`
 - [ ] Later: submit to the main homebrew-cask repository once Fuego meets its notability requirements
 - [ ] Before 1 Feb 2027: the Developer ID certificate in `APPLE_CERTIFICATE_BASE64` (serial 70EC6B1EA0A0BC1A) expires. Export a newer one (the G2 certificates expire in 2030 and 2031) and update the two certificate secrets.
 
@@ -36,7 +37,7 @@ What's left before the first public release.
 ## 🎬 Website & Media
 
 - [ ] **Menu bar demo GIF** (`website/fuego-menubar-demo.gif`): click the menu bar icon, open the popover, start a session. 320px wide, under 1MB.
-- [ ] Point the download link at the first release once it exists
+- [x] Point the download link at the latest release
 
 ## 💡 After Launch
 

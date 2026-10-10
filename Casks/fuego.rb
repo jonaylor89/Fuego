@@ -1,9 +1,8 @@
 cask "fuego" do
   version "1.0.0"
-  sha256 "REPLACE_WITH_SHA256_FROM_RELEASE_SCRIPT"
+  sha256 "71b7279e4b49e1c1db89edf749f2edb5f382e52f0acef2071c7cde37148383f2"
 
-  url "https://github.com/jonaylor89/fuego/releases/download/v#{version}/Fuego-#{version}.dmg",
-      verified: "github.com/jonaylor89/fuego/"
+  url "https://github.com/jonaylor89/Fuego/releases/download/v#{version}/Fuego-#{version}.dmg"
   name "Fuego"
   desc "Menu bar focus timer that blocks distracting websites and apps"
   homepage "https://getfuego.dev/"

@@ -1,58 +1,30 @@
 # 🔥 Fuego
 
-A minimal focus app for macOS that blocks distracting websites and apps to help you concentrate on what matters.
+A minimal macOS menu bar app that blocks distracting websites and apps while you focus.
 
-## Features
-
-- **Website Blocking**: A system-wide content filter (Apple's Network Extension framework) drops connections to blocked sites in every browser and app
-- **App Blocking**: Quits distracting apps, and keeps quitting them if they're reopened during a focus session
-- **Focus Timer**: Sessions from 5 to 120 minutes; blocking ends on its own when the timer does
-- **Menu Bar App**: Clean, minimal interface that stays out of your way
-- **Automatic Updates**: Signed updates through [Sparkle](https://sparkle-project.org)
-- **Open Source**: Built with Swift, fully open source and free to use
+- Blocks sites in every browser and app with a system-wide content filter, including subdomains
+- Quits distracting apps, and keeps quitting them if they're reopened during a session
+- Blocking ends on its own when the timer does
+- Updates itself through [Sparkle](https://sparkle-project.org)
 
 Requires macOS 15.5 or later.
 
-## Download
+## Install
 
-**[Download the latest release](https://github.com/jonaylor89/Fuego/releases/latest)** (a notarized DMG), or install with [Homebrew](https://brew.sh):
+[Download the latest release](https://github.com/jonaylor89/Fuego/releases/latest), or:
 
 ```bash
 brew install --cask jonaylor89/tap/fuego
 ```
 
-Drag Fuego into your Applications folder and open it from there; macOS only turns on its content filter for apps in Applications. Fuego updates itself after that. See [SETUP_INSTRUCTIONS.md](SETUP_INSTRUCTIONS.md) for the one-time approval and troubleshooting.
+Move Fuego to Applications and open it from there. The first time you start a session with sites to block, macOS asks you to turn on Fuego's content filter in **System Settings → General → Login Items & Extensions → Network Extensions**, then to allow it to filter network content.
 
-## How It Works
-
-Fuego ships a content filter as a system extension. The first time you start a session with sites on your blocklist, macOS asks you to allow it. When a session starts, the app hands the blocklist and the session's end time to the filter, and the filter drops any connection to a blocked domain or its subdomains (blocking `reddit.com` also blocks `old.reddit.com`).
-
-Browsers like Chrome and Firefox often connect by IP address, so the filter also reads the hostname from the start of each connection (the TLS server name, or the HTTP `Host` header). During a session, QUIC (HTTP/3) connections whose hostname the filter can't see are dropped too; browsers then fall back to regular HTTPS, which the filter can check.
-
-Tested with Safari, Chrome, Brave, and Firefox, including Chrome over HTTP/3 and Firefox with DNS over HTTPS and Encrypted Client Hello (ECH).
-
-**Known limits:** blocked pages show the browser's connection error rather than a custom page, since HTTPS traffic can't be redirected. Traffic tunneled through a VPN or proxy can get past the filter. A browser that hides both its DNS lookups and the TLS hostname (ECH) from macOS could in principle reach a blocked site served by Cloudflare; none of the tested browsers do.
+Blocked pages show the browser's connection error. Traffic through a VPN or proxy can get past the filter. Fuego never records or sends what you browse.
 
 ## Development
 
-### Building from Source
+Open `Fuego.xcodeproj` in Xcode. Building needs an Apple Developer account with the Network Extension capability. macOS only activates the filter for apps in `/Applications`, so copy the build there to test website blocking. Check the filter with `systemextensionsctl list` and `log stream --info --predicate 'subsystem BEGINSWITH "dev.getfuego"'`.
 
-```bash
-git clone https://github.com/jonaylor89/fuego.git
-cd fuego
-open Fuego.xcodeproj
-```
+Releases are built by the **Release** workflow (Actions → Release), which runs `scripts/release.sh` to sign, notarize, and publish the DMG and Sparkle appcast, then updates the [Homebrew tap](https://github.com/jonaylor89/homebrew-tap). The secrets it needs are listed in `.github/workflows/release.yml`.
 
-You need an Apple Developer account with the Network Extension capability, and your Mac registered as a development device. macOS only activates system extensions for apps in `/Applications`, so copy the built app there before testing website blocking. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development loop.
-
-### Contributing
-
-We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- Development setup
-- Code style guidelines  
-- Pull request process
-- How to report bugs
-
-**Made with 🔥 for focused productivity**
-
-[Website](https://getfuego.dev) • [Issues](https://github.com/jonaylor89/fuego/issues) • [Discussions](https://github.com/jonaylor89/fuego/discussions)
+[Website](https://getfuego.dev) · [Issues](https://github.com/jonaylor89/Fuego/issues)

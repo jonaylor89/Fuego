@@ -20,7 +20,7 @@ If applicable, add screenshots or videos demonstrating the change.
 - [ ] Refactoring (no functional changes)
 
 ## Testing Checklist
-- [ ] Tested on macOS 12+
+- [ ] Tested on macOS 15.5+
 - [ ] No console errors/warnings
 - [ ] Network Extension functionality works (if applicable)
 - [ ] App builds and runs correctly
@@ -28,9 +28,7 @@ If applicable, add screenshots or videos demonstrating the change.
 
 ## Documentation
 - [ ] Updated README.md if needed
-- [ ] Updated SETUP_INSTRUCTIONS.md if needed  
 - [ ] Added/updated code comments for complex changes
-- [ ] Updated CHANGELOG.md if needed
 
 ## Additional Notes
 Any additional information or context that reviewers should know.

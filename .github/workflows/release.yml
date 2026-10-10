@@ -207,7 +207,7 @@ jobs:
           # Upload everything to a draft first, then publish, so the appcast that
           # releases/latest/download serves never points at a missing DMG.
           gh release create "$TAG" \
-            "Fuego-$VERSION.dmg" appcast.xml SHA256SUMS.txt "Fuego-$VERSION-dSYMs.zip" \
+            "Fuego-$VERSION.dmg" Fuego.dmg appcast.xml SHA256SUMS.txt "Fuego-$VERSION-dSYMs.zip" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Fuego $VERSION" \

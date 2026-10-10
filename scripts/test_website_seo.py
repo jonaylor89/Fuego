@@ -110,6 +110,11 @@ class WebsiteSEOTests(unittest.TestCase):
         self.assertNotIn("aggregateRating", app)
         self.assertNotIn("review", app)
 
+    def test_direct_download(self):
+        download = next(attrs["href"] for tag, attrs in self.page.tags
+                        if tag == "a" and attrs.get("class") == "button")
+        self.assertEqual(download, "https://github.com/jonaylor89/Fuego/releases/latest/download/Fuego.dmg")
+
     def test_local_assets_exist(self):
         urls = []
         for tag, attrs in self.page.tags:

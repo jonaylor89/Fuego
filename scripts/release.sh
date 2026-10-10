@@ -183,9 +183,12 @@ while IFS= read -r copy; do
 done < <(find "$OUT" -name "*.app" -type d -prune)
 rm -rf "$STAGING" "$APPCAST_DIR" "$ARCHIVE" "$OUT/DerivedData" "$OUT/upload" "$OUT/app" \
     "$OUT/ExportOptions.plist" "$OUT/notarize.log"
-(cd "$OUT" && shasum -a 256 "$DMG_NAME" > SHA256SUMS.txt)
+# A stable filename lets the website download the latest release without JavaScript.
+# Create it after generating the appcast so Sparkle only sees the versioned DMG.
+cp "$DMG" "$OUT/Fuego.dmg"
+(cd "$OUT" && shasum -a 256 "$DMG_NAME" Fuego.dmg > SHA256SUMS.txt)
 
-SHA=$(cut -d' ' -f1 "$OUT/SHA256SUMS.txt")
+SHA=$(head -n 1 "$OUT/SHA256SUMS.txt" | cut -d' ' -f1)
 step "Done"
 echo "DMG:      $DMG"
 echo "Appcast:  $OUT/appcast.xml"

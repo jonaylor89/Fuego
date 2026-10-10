@@ -31,6 +31,8 @@ Releases are built by the **Release** workflow (Actions → Release), which runs
 
 The static site in `website/` is published at **https://getfuego.dev/**. Deploy that directory as the hosting root so `/robots.txt`, `/sitemap.xml`, and `/assets/` resolve correctly. Its metadata and sitemap use this canonical URL; update them together if the domain changes.
 
+The download button links directly to the latest release's `Fuego.dmg` asset. The release script publishes this identical, stable-named copy alongside the versioned DMG; Sparkle and Homebrew continue to use the versioned file.
+
 Run the offline SEO regression checks (also run in CI):
 
 ```bash

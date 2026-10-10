@@ -1,12 +1,13 @@
-/* Warm paper, mono like the app's menu bar window, one ember accent */
+/* Warm paper, mono like the app's menu bar window, fire-gradient accents */
 :root {
     color-scheme: light;
     --paper: #f7f3ec;
     --ink: #2a2622;
     --text: #6f675e;
     --muted: #9a9187;
-    --ember: #d9531e;
-    --ember-dark: #b8410f;
+    --ember: #e04a1c;
+    --ember-dark: #b8300f;
+    --fire: linear-gradient(100deg, #ffb340 0%, #ff6a2b 45%, #e3262f 100%);
     --line: #e5ddd1;
     --chip: #efe8dc;
     --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -43,12 +44,21 @@ nav {
 
 a {
     color: var(--ember);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+    text-decoration: none;
+    background: var(--fire) left bottom / 100% 1.5px no-repeat;
+    padding-bottom: 2px;
 }
 
 a:hover {
     color: var(--ember-dark);
+    background-size: 100% 3px;
+}
+
+.fire {
+    background: var(--fire);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 h1 {
@@ -87,14 +97,21 @@ p {
 }
 
 .button {
-    background: var(--ember);
+    background: var(--fire);
+    background-size: 160% 100%;
+    background-position: 0% 0;
     color: #fff;
     font-weight: 500;
+    box-shadow: 0 6px 18px -8px rgba(227, 38, 47, 0.55);
+    transition: background-position 0.4s ease, box-shadow 0.4s ease;
 }
 
 .button:hover {
-    background: var(--ember-dark);
+    background: var(--fire);
+    background-size: 160% 100%;
+    background-position: 100% 0;
     color: #fff;
+    box-shadow: 0 8px 26px -6px rgba(255, 106, 43, 0.7);
 }
 
 .brew {

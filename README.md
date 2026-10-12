@@ -27,23 +27,4 @@ Open `Fuego.xcodeproj` in Xcode. Building needs an Apple Developer account with 
 
 Releases are built by the **Release** workflow (Actions → Release), which runs `scripts/release.sh` to sign, notarize, and publish the DMG and Sparkle appcast, then updates the [Homebrew tap](https://github.com/jonaylor89/homebrew-tap). The secrets it needs are listed in `.github/workflows/release.yml`.
 
-## Website
-
-The static site in `website/` is published at **https://getfuego.dev/**. Deploy that directory as the hosting root so `/robots.txt`, `/sitemap.xml`, and `/assets/` resolve correctly. Its metadata and sitemap use this canonical URL; update them together if the domain changes.
-
-The download button links directly to the latest release's `Fuego.dmg` asset. The release script publishes this identical, stable-named copy alongside the versioned DMG; Sparkle and Homebrew continue to use the versioned file.
-
-Run the offline SEO regression checks (also run in CI):
-
-```bash
-python3 scripts/test_website_seo.py
-```
-
-After deploying:
-
-- Keep **Always Use HTTPS** enabled in Cloudflare (SSL/TLS → Edge Certificates). It is enabled for `getfuego.dev` and returns permanent `301` redirects to HTTPS while preserving paths and query strings. If a `www` hostname is added, permanently redirect it to the apex domain too.
-- Confirm the homepage, `/robots.txt`, `/sitemap.xml`, and social preview image return `200` over HTTPS, with appropriate content types and no `X-Robots-Tag: noindex` header. Prefer a permanent redirect from `/index.html` to `/` (the current host uses `307`).
-- Verify a domain property in Google Search Console using DNS, submit `https://getfuego.dev/sitemap.xml`, and inspect/request indexing for the homepage. Submit the same sitemap to Bing Webmaster Tools.
-- Check the live URL in the Schema.org validator and Google Rich Results Test, and check its link preview in a social sharing debugger. The software schema describes the real, free app; it deliberately contains no invented ratings or reviews, so a Google software-app rich result is not guaranteed.
-
 [Website](https://getfuego.dev) · [Issues](https://github.com/jonaylor89/Fuego/issues)

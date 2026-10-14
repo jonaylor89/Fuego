@@ -92,9 +92,12 @@
 
         <p>all in native swift.<br>open-source.<br>free. enjoy.</p>
 
-        <div class="get">
-            <a class="button" href="https://github.com/jonaylor89/Fuego/releases/latest/download/Fuego.dmg">download</a>
-        </div>
+        <!-- Inputs are unnamed so a no-JS submit goes straight to the DMG. script.js records the email with hub first. -->
+        <form class="get" action="https://github.com/jonaylor89/Fuego/releases/latest/download/Fuego.dmg" method="get" data-download-form data-app="fuego" data-hub-url="https://hub.jonaylor.com">
+            <input class="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" aria-label="email address">
+            <input class="hp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="button" type="submit">download</button>
+        </form>
 
         <img class="demo" src="assets/fuego-blocking.jpg" width="1600" height="1039" alt="youtube.com won't load in chrome while the fuego menu bar window counts down a focus session">
 

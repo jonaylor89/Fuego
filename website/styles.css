@@ -96,7 +96,40 @@ p {
     transition: color 0.15s, background-color 0.15s, border-color 0.15s;
 }
 
+.email {
+    flex: 0 1 260px;
+    min-width: 0;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 16px;
+}
+
+.email::placeholder {
+    color: var(--muted);
+}
+
+.email:focus {
+    outline: none;
+    border-color: var(--ember);
+    box-shadow: 0 0 0 3px rgba(255, 106, 43, 0.18);
+}
+
+.hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
 .button {
+    border: 0;
+    cursor: pointer;
     background: var(--fire);
     background-size: 160% 100%;
     background-position: 0% 0;
@@ -112,6 +145,14 @@ p {
     background-position: 100% 0;
     color: #fff;
     box-shadow: 0 8px 26px -6px rgba(255, 106, 43, 0.7);
+}
+
+.button:disabled,
+.button:disabled:hover {
+    background-position: 0% 0;
+    box-shadow: none;
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .brew {
@@ -159,5 +200,9 @@ p {
 
     h1 {
         font-size: 30px;
+    }
+
+    .email {
+        flex-basis: 100%;
     }
 }
